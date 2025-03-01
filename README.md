@@ -293,14 +293,11 @@ wifiManager.setLogo("/custom_logo.png");
 
 The ModernWifi configuration portal features a clean, responsive interface:
 
-![Captive Portal Main Screen](screenshots/captive_portal_main.png)
-*The main configuration screen with network selection*
+![PC Interface](screenshots/PC.png)
+*The configuration portal as viewed on a desktop browser*
 
-![Custom Parameters](screenshots/custom_parameters.png)
-*Custom parameter configuration with various input types*
-
-![Connection Success](screenshots/connection_success.png)
-*Successful connection screen with device information*
+![Mobile Interface](screenshots/Mobile.png)
+*The responsive mobile interface for on-the-go configuration*
 
 ## 📚 API Reference
 
