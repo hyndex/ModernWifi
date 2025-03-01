@@ -281,7 +281,26 @@ wifiManager.setCustomHeadElement("<link href='https://cdn.jsdelivr.net/npm/tailw
 
 // Add custom HTML to the body footer
 wifiManager.setCustomBodyFooter("<div class='text-center'>My Custom Footer</div>");
+
+// Change the theme colors
+wifiManager.setThemeColor("#4F46E5", "#818CF8"); // primary and secondary colors
+
+// Set custom logo
+wifiManager.setLogo("/custom_logo.png");
 ```
+
+#### Interface Screenshots
+
+The ModernWifi configuration portal features a clean, responsive interface:
+
+![Captive Portal Main Screen](screenshots/captive_portal_main.png)
+*The main configuration screen with network selection*
+
+![Custom Parameters](screenshots/custom_parameters.png)
+*Custom parameter configuration with various input types*
+
+![Connection Success](screenshots/connection_success.png)
+*Successful connection screen with device information*
 
 ## 📚 API Reference
 
