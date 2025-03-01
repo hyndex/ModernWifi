@@ -18,6 +18,7 @@ const char* WiFiManagerParameter::getLabel() const { return _label.c_str(); }
 const char* WiFiManagerParameter::getValue() const { return _value.c_str(); }
 void WiFiManagerParameter::setValue(const char* value) { _value = value; }
 const char* WiFiManagerParameter::getCustomHTML() const { return _customHTML.c_str(); }
+const char* WiFiManagerParameter::getCustomAttributes() const { return _customAttributes.c_str(); }
 int WiFiManagerParameter::getLabelPlacement() const { return _labelPlacement; }
 
 // ----- WiFiManager Implementation -----
@@ -63,21 +64,42 @@ void WiFiManager::begin() {
 #endif
 
   // Initialize filesystem for serving web files
+  bool fsInitialized = false;
 #ifdef USING_ESP32
-  if (!SPIFFS.begin(true)) {
+  fsInitialized = SPIFFS.begin(true);
+  if (!fsInitialized) {
     debug("An error occurred while mounting SPIFFS");
+    // Try to format and mount again
+    debug("Attempting to format and mount SPIFFS...");
+    if (SPIFFS.format() && SPIFFS.begin(true)) {
+      fsInitialized = true;
+      debug("SPIFFS formatted and mounted successfully");
+    } else {
+      debug("SPIFFS format failed. Web interface may not work properly.");
+    }
   } else {
     debug("SPIFFS mounted successfully");
   }
 #elif defined(USING_RP2040)
-  if (!SPIFFS.begin()) {
+  fsInitialized = SPIFFS.begin();
+  if (!fsInitialized) {
     debug("An error occurred while mounting LittleFS");
+    // Try to format and mount again
+    debug("Attempting to format and mount LittleFS...");
+    if (SPIFFS.format() && SPIFFS.begin()) {
+      fsInitialized = true;
+      debug("LittleFS formatted and mounted successfully");
+    } else {
+      debug("LittleFS format failed. Web interface may not work properly.");
+    }
   } else {
     debug("LittleFS mounted successfully");
   }
 #elif defined(USING_AVR) || defined(USING_STM32) || defined(USING_NXP)
-  if (!SPIFFS.begin()) {
+  fsInitialized = SPIFFS.begin();
+  if (!fsInitialized) {
     debug("An error occurred while mounting filesystem");
+    debug("Web interface may not work properly.");
   } else {
     debug("Filesystem mounted successfully");
   }
@@ -432,7 +454,6 @@ void WiFiManager::handleParamsJSON(AsyncWebServerRequest *request) {
   }
   json += "]";
   request->send(200, "application/json", json);
-}
 }
 
 // ----- Internal Helper Methods -----

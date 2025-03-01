@@ -4,7 +4,7 @@
 WiFiManagerParameter::WiFiManagerParameter(const char* id, const char* label, const char* defaultValue,
                                          int length, const char* customHTML, int labelPlacement)
     : _id(id), _label(label), _value(defaultValue), _length(length),
-      _customAttributes(customHTML), _labelPlacement(labelPlacement),
+      _customHTML(customHTML), _customAttributes(""), _labelPlacement(labelPlacement),
       _type(ParameterType::TEXT) {}
 
 // Constructor for advanced parameter types

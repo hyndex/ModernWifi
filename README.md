@@ -1,11 +1,11 @@
 # ModernWifi
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform: ESP32](https://img.shields.io/badge/Platform-ESP32-green.svg)](https://www.espressif.com/en/products/socs/esp32)
+[![Platform: ESP32|RP2040](https://img.shields.io/badge/Platform-ESP32%7CRP2040-green.svg)](https://www.espressif.com/en/products/socs/esp32)
 [![Framework: Arduino](https://img.shields.io/badge/Framework-Arduino-blue.svg)](https://www.arduino.cc/)
-[![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)](https://github.com/yourusername/ModernWifi/releases)
+[![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-brightgreen.svg)](https://github.com/yourusername/ModernWifi/releases)
 
-A production-ready WiFi connection manager for ESP32 with captive portal, mDNS, HTTPS, and JSON API endpoints.
+A production-ready WiFi connection manager for ESP32 and RP2040 with captive portal, mDNS, HTTPS, and JSON API endpoints.
 
 ## 📋 Table of Contents
 
@@ -47,6 +47,21 @@ A production-ready WiFi connection manager for ESP32 with captive portal, mDNS, 
 - **Modern UI**: Clean interface with Tailwind CSS
 - **Multiple Parameter Types**: Support for various input types (text, number, color, etc.)
 - **Validation**: Built-in and custom validation for parameters
+- **Cross-Platform Support**: Works on ESP32 variants and RP2040 (Raspberry Pi Pico W)
+- **Memory Management**: Proper cleanup of resources to prevent memory leaks
+- **Filesystem Resilience**: Automatic recovery from filesystem mount failures
+
+## 🔄 What's New in v1.1.0
+
+- **Enhanced Platform Support**: Added support for RP2040 (Raspberry Pi Pico W) and improved ESP32 variant compatibility
+- **Memory Management Improvements**: Added proper cleanup of WiFiManagerParameter objects to prevent memory leaks
+- **Platform-Specific Restart Handling**: Implemented platform-specific device restart methods for better compatibility
+- **Filesystem Initialization Improvements**: Added automatic recovery from filesystem mount failures with formatting capability
+- **Parameter Type System**: Enhanced parameter type handling with proper validation
+- **Bug Fixes**:
+  - Fixed syntax error in WiFiManager.cpp
+  - Resolved compatibility issues between WiFiManager and WiFiManagerParameter classes
+  - Improved error handling throughout the codebase
 
 ## 📥 Installation
 

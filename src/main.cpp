@@ -70,7 +70,18 @@ void configTimeoutCallback() {
     WiFi.reconnect();
   } else {
     Serial.println("No saved credentials. Restarting device...");
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32)
     ESP.restart();
+#elif defined(ARDUINO_ARCH_ESP8266) || defined(ESP8266)
+    ESP.restart();
+#elif defined(ARDUINO_ARCH_RP2040)
+    // RP2040 reset method
+    watchdog_enable(1, 1);
+    while(1); // Wait for watchdog to reset
+#else
+    // Generic reset fallback - most Arduino boards support this
+    asm volatile ("jmp 0");
+#endif
   }
 }
 
@@ -176,6 +187,30 @@ void setup() {
   }
 }
 
+// Clean up WiFiManagerParameter objects to prevent memory leaks
+void cleanupParameters() {
+  if (customMqttServer) {
+    delete customMqttServer;
+    customMqttServer = nullptr;
+  }
+  if (customMqttPort) {
+    delete customMqttPort;
+    customMqttPort = nullptr;
+  }
+  if (customDeviceName) {
+    delete customDeviceName;
+    customDeviceName = nullptr;
+  }
+  if (customThemeColor) {
+    delete customThemeColor;
+    customThemeColor = nullptr;
+  }
+  if (customUpdateInterval) {
+    delete customUpdateInterval;
+    customUpdateInterval = nullptr;
+  }
+}
+
 void loop() {
   // Process incoming HTTP and DNS requests (for the captive portal, JSON API, etc.)
   wifiManager.loop();
@@ -220,4 +255,9 @@ void loop() {
   
   // Small delay to prevent watchdog issues
   delay(10);
+}
+
+// Call this function when the program ends or during deep sleep
+void onShutdown() {
+  cleanupParameters();
 }

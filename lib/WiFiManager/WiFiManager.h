@@ -60,24 +60,45 @@ struct WiFiNetwork {
   uint8_t encryptionType;
 };
 
+// Forward declaration of ParameterType enum class
+enum class ParameterType;
+
 // WiFiManagerParameter: For adding extra configuration fields.
 class WiFiManagerParameter {
 public:
   // labelPlacement: 0 = no label, 1 = before field, 2 = after field.
   WiFiManagerParameter(const char* id, const char* label, const char* defaultValue, int length, const char* customHTML = "", int labelPlacement = 1);
+  
+  // Constructor for advanced parameter types
+  WiFiManagerParameter(const char* id, const char* label, const char* defaultValue,
+                      ParameterType type, const char* customAttributes = "");
+  
   const char* getID() const;
   const char* getLabel() const;
   const char* getValue() const;
   void setValue(const char* value);
   const char* getCustomHTML() const;
+  const char* getCustomAttributes() const;
+  ParameterType getType() const;
   int getLabelPlacement() const;
+  bool isValid() const;
+  
+  // Validation
+  void setValidation(std::function<bool(const char*)> validator);
+  
 private:
   String _id;
   String _label;
   String _value;
   int _length;
   String _customHTML;
+  String _customAttributes;
   int _labelPlacement;
+  ParameterType _type;
+  std::function<bool(const char*)> _validator;
+  
+  // Helper methods
+  bool validateValue(const char* value) const;
 };
 
 // Configuration structure.
