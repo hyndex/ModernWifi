@@ -1,0 +1,28 @@
+{
+  "brand": {
+    "name": "ModernWifi",
+    "logo": "/logo.png",
+    "favicon": "/favicon.ico",
+    "version": "1.0.0"
+  },
+  "theme": {
+    "primary_color": "#3B82F6",
+    "secondary_color": "#818CF8",
+    "success_color": "#10B981",
+    "danger_color": "#EF4444",
+    "warning_color": "#F59E0B",
+    "info_color": "#3B82F6"
+  },
+  "portal": {
+    "title": "WiFi Configuration Portal",
+    "subtitle": "Connect your device to a WiFi network",
+    "footer_text": "ModernWifi WiFi Configuration Portal",
+    "copyright": "© 2023 Your Company"
+  },
+  "ui": {
+    "default_theme": "auto",
+    "allow_theme_switch": true,
+    "show_signal_strength": true,
+    "show_footer": true
+  }
+}

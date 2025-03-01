@@ -15,18 +15,143 @@ const togglePasswordBtn = document.getElementById('toggle-password');
 const scanBtn = document.getElementById('scan-btn');
 const resetBtn = document.getElementById('reset-btn');
 const customParams = document.getElementById('custom-params');
+const themeToggle = document.getElementById('theme-toggle');
+const headerTitle = document.getElementById('header-title');
+const headerSubtitle = document.getElementById('header-subtitle');
+const footerVersion = document.getElementById('footer-version');
+const footerText = document.getElementById('footer-text');
+const favicon = document.getElementById('favicon');
+const logoImage = document.getElementById('logo-image');
+const copyrightText = document.getElementById('copyright-text');
 
 // State
 let networks = [];
 let selectedNetwork = null;
+let branding = null;
+let currentTheme = 'light'; // Default theme
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+  loadBrandingConfig();
+  initializeTheme();
   fetchStatus();
   fetchNetworks();
   fetchCustomParams();
   setupEventListeners();
 });
+
+// Load branding configuration
+async function loadBrandingConfig() {
+  try {
+    const response = await fetch('/branding.json');
+    branding = await response.json();
+    
+    // Apply branding to UI elements
+    if (branding) {
+      // Update page title and favicon
+      if (branding.brand) {
+        document.title = branding.brand.name || 'WiFi Manager';
+        if (favicon && branding.brand.favicon) {
+          favicon.href = branding.brand.favicon;
+        }
+        
+        // Update header title and logo
+        if (headerTitle) {
+          headerTitle.textContent = branding.brand.name || 'WiFi Manager';
+        }
+        
+        // Show logo if available
+        if (logoImage && branding.brand.logo) {
+          logoImage.src = branding.brand.logo;
+          logoImage.classList.remove('hidden');
+        }
+      }
+      
+      // Update portal text
+      if (branding.portal) {
+        if (headerSubtitle) {
+          headerSubtitle.textContent = branding.portal.subtitle || 'WiFi Configuration Portal';
+        }
+        
+        // Update footer text
+        const footerElements = document.querySelectorAll('footer p');
+        if (footerElements.length >= 2) {
+          footerElements[0].textContent = branding.brand.name + ' v' + branding.brand.version;
+          footerElements[1].textContent = branding.portal.footer_text || 'ESP32 WiFi Configuration Portal';
+        }
+      }
+      
+      // Apply theme colors
+      if (branding.theme) {
+        document.documentElement.style.setProperty('--primary-color', branding.theme.primary_color);
+        document.documentElement.style.setProperty('--secondary-color', branding.theme.secondary_color);
+        document.documentElement.style.setProperty('--success-color', branding.theme.success_color);
+        document.documentElement.style.setProperty('--danger-color', branding.theme.danger_color);
+        document.documentElement.style.setProperty('--warning-color', branding.theme.warning_color);
+        document.documentElement.style.setProperty('--info-color', branding.theme.info_color);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading branding configuration:', error);
+  }
+}
+
+// Initialize theme based on preferences
+function initializeTheme() {
+  // Check if theme preference is stored in localStorage
+  const savedTheme = localStorage.getItem('theme');
+  
+  if (savedTheme) {
+    // Use saved preference
+    currentTheme = savedTheme;
+  } else if (branding && branding.ui && branding.ui.default_theme) {
+    // Use default from branding config
+    currentTheme = branding.ui.default_theme;
+  } else {
+    // Default to auto
+    currentTheme = 'auto';
+  }
+  
+  applyTheme(currentTheme);
+}
+
+// Apply the selected theme
+function applyTheme(theme) {
+  // Update current theme
+  currentTheme = theme;
+  
+  // Save preference to localStorage
+  localStorage.setItem('theme', theme);
+  
+  // Apply theme
+  if (theme === 'dark') {
+    document.body.classList.add('dark-mode');
+    if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+  } else if (theme === 'light') {
+    document.body.classList.remove('dark-mode');
+    if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+  } else if (theme === 'auto') {
+    // Check system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.classList.add('dark-mode');
+      if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-adjust"></i>';
+    } else {
+      document.body.classList.remove('dark-mode');
+      if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-adjust"></i>';
+    }
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (currentTheme === 'auto') {
+        if (e.matches) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }
+    });
+  }
+}
 
 // Setup Event Listeners
 function setupEventListeners() {
@@ -48,6 +173,20 @@ function setupEventListeners() {
       const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordInput.setAttribute('type', type);
       togglePasswordBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+  }
+  
+  // Theme toggle button
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      // Cycle through themes: light -> dark -> auto -> light
+      if (currentTheme === 'light') {
+        applyTheme('dark');
+      } else if (currentTheme === 'dark') {
+        applyTheme('auto');
+      } else {
+        applyTheme('light');
+      }
     });
   }
 }

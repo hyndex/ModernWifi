@@ -1,0 +1,113 @@
+:root {
+  --primary-color: #3B82F6; /* blue-500 */
+  --primary-light: #DBEAFE; /* blue-100 */
+  --primary-dark: #2563EB; /* blue-600 */
+  --secondary-color: #818CF8; /* indigo-400 */
+  --background-color: #1F2937; /* gray-800 */
+  --card-background: #374151; /* gray-700 */
+  --text-color: #F9FAFB; /* gray-50 */
+  --text-secondary: #D1D5DB; /* gray-300 */
+  --divider-color: #4B5563; /* gray-600 */
+  --danger-color: #EF4444; /* red-500 */
+  --success-color: #10B981; /* green-500 */
+  --warning-color: #F59E0B; /* amber-500 */
+  --info-color: #3B82F6; /* blue-500 */
+}
+
+body.dark-mode {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.dark-mode header {
+  background-image: linear-gradient(to right, #1E40AF, #4F46E5); /* blue-800 to indigo-600 */
+}
+
+.dark-mode .bg-white {
+  background-color: var(--card-background);
+}
+
+.dark-mode .text-gray-800 {
+  color: var(--text-color);
+}
+
+.dark-mode .text-gray-600 {
+  color: var(--text-secondary);
+}
+
+.dark-mode .text-gray-500 {
+  color: var(--text-secondary);
+}
+
+.dark-mode .border-gray-200 {
+  border-color: var(--divider-color);
+}
+
+.dark-mode .border-gray-300 {
+  border-color: var(--divider-color);
+}
+
+.dark-mode input, 
+.dark-mode select, 
+.dark-mode textarea {
+  background-color: #4B5563; /* gray-600 */
+  border-color: #6B7280; /* gray-500 */
+  color: var(--text-color);
+}
+
+.dark-mode input:focus, 
+.dark-mode select:focus, 
+.dark-mode textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+.dark-mode .network-item {
+  border-color: var(--divider-color);
+}
+
+.dark-mode .network-item:hover {
+  background-color: #4B5563; /* gray-600 */
+}
+
+.dark-mode .network-item.selected {
+  background-color: #3B82F6; /* blue-500 with opacity */
+  border-left: 3px solid #93C5FD; /* blue-300 */
+}
+
+.dark-mode footer {
+  color: var(--text-secondary);
+}
+
+.dark-mode .error {
+  background-color: rgba(239, 68, 68, 0.2); /* red-500 with opacity */
+  color: #FCA5A5; /* red-300 */
+}
+
+.dark-mode .success {
+  background-color: rgba(16, 185, 129, 0.2); /* green-500 with opacity */
+  color: #6EE7B7; /* green-300 */
+}
+
+.dark-mode .custom-param {
+  background-color: #4B5563; /* gray-600 */
+  border-color: #6B7280; /* gray-500 */
+}
+
+/* Signal strength bars in dark mode */
+.dark-mode #signal-bars span {
+  background-color: #60A5FA; /* blue-400 */
+}
+
+/* Toggle switch in dark mode */
+.dark-mode .toggle-slider {
+  background-color: #6B7280; /* gray-500 */
+}
+
+.dark-mode input:checked + .toggle-slider {
+  background-color: #60A5FA; /* blue-400 */
+}
+
+.dark-mode input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #60A5FA; /* blue-400 */
+}
