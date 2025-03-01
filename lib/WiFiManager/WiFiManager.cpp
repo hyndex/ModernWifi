@@ -1,9 +1,8 @@
 #include "WiFiManager.h"
 #include <Arduino.h>
 #include <cstring>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <SPIFFS.h>
+
+// Platform-specific includes are handled in WiFiManager.h
 
 #ifdef USE_HTTPS
   // Using AsyncWebServer with HTTPS support
@@ -63,12 +62,26 @@ void WiFiManager::begin() {
   _server = new AsyncWebServer(_config.httpPort);
 #endif
 
-  // Initialize SPIFFS for serving web files
+  // Initialize filesystem for serving web files
+#ifdef USING_ESP32
   if (!SPIFFS.begin(true)) {
     debug("An error occurred while mounting SPIFFS");
   } else {
     debug("SPIFFS mounted successfully");
   }
+#elif defined(USING_RP2040)
+  if (!SPIFFS.begin()) {
+    debug("An error occurred while mounting LittleFS");
+  } else {
+    debug("LittleFS mounted successfully");
+  }
+#elif defined(USING_AVR) || defined(USING_STM32) || defined(USING_NXP)
+  if (!SPIFFS.begin()) {
+    debug("An error occurred while mounting filesystem");
+  } else {
+    debug("Filesystem mounted successfully");
+  }
+#endif
 
   startDNS();
 
@@ -107,7 +120,7 @@ void WiFiManager::begin() {
   _server->begin();
   debug("Async HTTP server started on port " + String(_config.httpPort));
 
-#ifdef ESP32
+#ifdef USING_ESP32
   if (_useMDNS) {
     if (MDNS.begin(_mdnsHostname.c_str())) {
       debug("mDNS responder started as " + _mdnsHostname);
@@ -115,6 +128,17 @@ void WiFiManager::begin() {
     } else {
       debug("Error starting mDNS responder!");
     }
+  }
+#elif defined(USING_RP2040)
+  // RP2040 mDNS implementation
+  if (_useMDNS) {
+    // Note: Implement RP2040-specific mDNS when available
+    debug("mDNS for RP2040 not yet implemented");
+  }
+#elif defined(USING_AVR) || defined(USING_STM32) || defined(USING_NXP)
+  // Other platforms mDNS implementation if available
+  if (_useMDNS) {
+    debug("mDNS not available for this platform");
   }
 #endif
 }
@@ -263,6 +287,12 @@ void WiFiManager::setSSLCredentials(const char* cert, const char* key) {
 
 void WiFiManager::setUseHTTPS(bool flag) {
   _useHTTPS = flag;
+#ifndef USE_HTTPS
+  if (flag) {
+    debug("HTTPS requested but not compiled with USE_HTTPS flag. Using HTTP instead.");
+    _useHTTPS = false;
+  }
+#endif
 }
 
 String WiFiManager::getConnectionStatus() {

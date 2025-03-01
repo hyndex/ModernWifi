@@ -1,16 +1,51 @@
 #ifndef WIFI_MANAGER_H
 #define WIFI_MANAGER_H
 
-#include <WiFi.h>
-#include <DNSServer.h>
-#include <ESPAsyncWebServer.h>
-#include <AsyncTCP.h>
-#ifdef ESP32
+// Platform detection
+#if defined(ESP32) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C5) || defined(ESP32C6)
+  #define USING_ESP32
+  #include <WiFi.h>
   #include <ESPmDNS.h>
+  #include <SPIFFS.h>
+  #include <AsyncTCP.h>
+  #include <ESPAsyncWebServer.h>
+#elif defined(ARDUINO_ARCH_RP2040)
+  // RP2040 (Raspberry Pi Pico W, RP2350)
+  #include <WiFi.h>
+  #include <LittleFS.h>
+  #define USING_RP2040
+  // Use appropriate libraries for RP2040
+  #include <AsyncTCP_RP2040W.h>
+  #include <ESPAsyncWebServer.h>
+  #define SPIFFS LittleFS
+#elif defined(ARDUINO_ARCH_AVR)
+  // Atmel AVR microcontrollers
+  #define USING_AVR
+  #include <WiFi101.h> // For AVR with WiFi shield
+  #include <SPI.h>
+  #include <SD.h>
+  #define SPIFFS SD
+#elif defined(ARDUINO_ARCH_STM32)
+  // STM32 microcontrollers
+  #define USING_STM32
+  #include <WiFi.h>
+  #include <SPI.h>
+  #include <SD.h>
+  #define SPIFFS SD
+#elif defined(ARDUINO_ARCH_NXP)
+  // NXP microcontrollers
+  #define USING_NXP
+  #include <WiFi.h>
+  #include <SPI.h>
+  #include <SD.h>
+  #define SPIFFS SD
+#else
+  #error "Unsupported platform. Please check compatibility."
 #endif
+
+#include <DNSServer.h>
 #include <vector>
 #include <functional>
-#include <SPIFFS.h>
 
 #ifdef USE_HTTPS
   #include <WiFiClientSecure.h>
