@@ -1,0 +1,353 @@
+/* Modern WiFi Manager - Custom Stylesheet to complement Tailwind CSS */
+
+/* Custom animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Signal strength bars styling */
+#signal-bars {
+  display: flex;
+  align-items: flex-end;
+  height: 15px;
+}
+
+#signal-bars span {
+  width: 3px;
+  margin-right: 2px;
+  background-color: #3B82F6; /* blue-500 */
+  border-radius: 1px;
+}
+
+#signal-bars .signal-0 { height: 3px; }
+#signal-bars .signal-1 { height: 6px; }
+#signal-bars .signal-2 { height: 9px; }
+#signal-bars .signal-3 { height: 12px; }
+#signal-bars .signal-4 { height: 15px; }
+
+/* Network list styling */
+.network-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid #E5E7EB; /* gray-200 */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.network-item:hover {
+  background-color: #EFF6FF; /* blue-50 */
+}
+
+.network-item.selected {
+  background-color: #DBEAFE; /* blue-100 */
+  border-left: 3px solid #3B82F6; /* blue-500 */
+}
+
+.network-secure {
+  margin-left: 5px;
+  color: #6B7280; /* gray-500 */
+}
+
+/* Form styling enhancements */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+}
+
+/* Custom loading animation */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #6B7280; /* gray-500 */
+}
+
+.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Error message styling */
+.error {
+  color: #EF4444; /* red-500 */
+  text-align: center;
+  padding: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .grid {
+    gap: 1rem;
+  }
+  
+  .md\:col-span-2 {
+    grid-column: span 1;
+  }
+}
+.network-item.selected {
+  background-color: var(--primary-light);
+  border-left: 3px solid var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="email"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group input[type="tel"],
+.form-group input[type="search"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group input[type="datetime-local"],
+.form-group input[type="month"],
+.form-group input[type="week"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input[type="color"] {
+  width: 50px;
+  height: 40px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+}
+
+.form-group input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  margin-right: 8px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.secondary-btn {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.secondary-btn:hover {
+  background-color: #a7d1f7;
+}
+
+.danger-btn {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.danger-btn:hover {
+  background-color: #d32f2f;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.network-item:last-child {
+  border-bottom: none;
+}
+
+.network-name {
+  font-weight: 500;
+}
+
+.signal-strength {
+  display: flex;
+  align-items: center;
+}
+
+.signal-bars {
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.secondary-btn {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.secondary-btn:hover {
+  background-color: #a7d1f7;
+}
+
+.danger-btn {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.danger-btn:hover {
+  background-color: #d32f2f;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+footer {
+  text-align: center;
+  margin-top: 30px;
+  color: var(--text-secondary);
+}
+
+.small {
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Signal strength indicator */
+.signal-0, .signal-1, .signal-2, .signal-3, .signal-4 {
+  display: inline-block;
+  width: 6px;
+  margin-right: 2px;
+  background-color: var(--primary-color);
+  border-radius: 1px;
+}
+
+.signal-0 { height: 3px; }
+.signal-1 { height: 6px; }
+.signal-2 { height: 9px; }
+.signal-3 { height: 12px; }
+.signal-4 { height: 15px; }
+
+.network-secure {
+  color: var(--success-color);
+  margin-left: 5px;
+}

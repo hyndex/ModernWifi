@@ -1,0 +1,16 @@
+{
+    "name": "WiFiManager",
+    "version": "1.0.0",
+    "keywords": "wifi, captive portal, esp32, mdns, https, json, configuration",
+    "description": "Production-ready WiFi connection manager with optional captive portal, mDNS, HTTPS, and JSON API endpoints.",
+    "authors": [
+      {
+        "name": "Chinmoy Bhuyan",
+        "email": "dikibhuyan@gmail.com"
+      }
+    ],
+    "license": "MIT",
+    "frameworks": "arduino",
+    "platforms": ["espressif32"]
+  }
+  
