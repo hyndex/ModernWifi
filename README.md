@@ -85,6 +85,38 @@ lib_deps =
 #include <Preferences.h>
 ```
 
+### Cross-Platform Compilation
+
+ModernWifi is designed to work on multiple platforms. Here's how to compile for different boards using PlatformIO:
+
+#### ESP32 (Fully Supported)
+
+```bash
+pio run -e esp32
+```
+
+This will compile the project for ESP32 with all features enabled, including HTTPS and mDNS support.
+
+#### ESP32-S3 (Fully Supported)
+
+```bash
+pio run -e esp32-s3-devkitc-1
+```
+
+#### RP2040 (Partial Support)
+
+The Raspberry Pi Pico W support is currently in development. Some features may not work correctly due to platform-specific limitations.
+
+```bash
+pio run -e pico
+```
+
+**Note:** When compiling for RP2040, you may encounter issues with WiFi libraries and filesystem support. We're actively working to improve compatibility.
+
+#### Other Platforms
+
+The library includes configurations for AVR, STM32, and NXP platforms in the platformio.ini file, but these are currently experimental and may require additional modifications to work correctly.
+
 ### Arduino IDE
 
 1. Download this repository as a ZIP file
