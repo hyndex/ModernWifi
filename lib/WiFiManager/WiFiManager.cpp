@@ -14,9 +14,14 @@
 WiFiManager::WiFiManager(const WiFiManagerConfig& config)
   : _config(config), _server(nullptr), _debug(true), _debugPort(&Serial),
     _customHeadElement(""), _customBodyFooter(""), _useMDNS(false), _mdnsHostname("esp32"),
-    _useHTTPS(false), _configPortalStart(0), _lastConxResult(WL_IDLE_STATUS)
+    _useHTTPS(false), _configPortalStart(0), _lastConxResult(WL_IDLE_STATUS),
+    _useAuth(config.useAuth), _portalUsername(config.portalUsername), _portalPassword(config.portalPassword)
 #ifdef USE_HTTPS
     , _sslCert(""), _sslKey("")
+#endif
+#ifdef ENABLE_SERIAL_MONITOR
+    , _enableSerialMonitor(config.enableSerialMonitor), _serialMonitorBuffer(""),
+    _serialMonitorBufferSize(config.serialMonitorBufferSize), _lastSerialUpdate(0)
 #endif
 {}
 
@@ -338,6 +343,10 @@ std::vector<WiFiNetwork> WiFiManager::scanNetworks(bool forceScan) {
 
 // ----- Internal HTTP Handlers -----
 void WiFiManager::handleRoot(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   String page = "<html><head>";
   if (_customHeadElement.length() > 0)
     page += _customHeadElement;
@@ -349,6 +358,10 @@ void WiFiManager::handleRoot(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleScan(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   auto networks = scanNetworks(true);
   String json = "[";
   for (size_t i = 0; i < networks.size(); i++) {
@@ -365,6 +378,10 @@ void WiFiManager::handleScan(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleConnect(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   if (request->method() == HTTP_POST) {
     if (request->hasParam("ssid", true) && request->hasParam("password", true)) {
       String ssid = request->getParam("ssid", true)->value();
@@ -384,6 +401,10 @@ void WiFiManager::handleConnect(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleReset(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   resetSettings();
   request->send(200, "application/json", "{\"result\":\"Settings reset\"}");
 }
@@ -394,6 +415,10 @@ void WiFiManager::handleNotFound(AsyncWebServerRequest *request) {
 
 // ----- JSON API Handlers -----
 void WiFiManager::handleStatusJSON(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   String json = "{";
   json += "\"status\":\"" + getConnectionStatus() + "\",";
   json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
@@ -403,6 +428,10 @@ void WiFiManager::handleStatusJSON(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleParamsJSON(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
   String json = "[";
   for (size_t i = 0; i < _params.size(); i++) {
     json += "{";
@@ -460,4 +489,118 @@ bool WiFiManager::startAPMode(const char* apName, const char* apPassword) {
   }
   delay(1000); // Allow the AP to initialize.
   return result;
+}
+
+// Authentication methods
+void WiFiManager::setAuthentication(bool enable, const char* username, const char* password) {
+  _useAuth = enable;
+  if (enable) {
+    _portalUsername = username;
+    _portalPassword = password;
+  }
+}
+
+bool WiFiManager::isAuthenticationEnabled() const {
+  return _useAuth;
+}
+
+bool WiFiManager::checkAuthentication(AsyncWebServerRequest *request) {
+  if (!_useAuth) {
+    return true; // Authentication not required
+  }
+  
+  if (!request->authenticate(_portalUsername.c_str(), _portalPassword.c_str())) {
+    request->requestAuthentication();
+    return false;
+  }
+  return true;
+}
+
+// Serial monitor methods
+#ifdef ENABLE_SERIAL_MONITOR
+void WiFiManager::enableSerialMonitor(bool enable, unsigned int bufferSize) {
+  _enableSerialMonitor = enable;
+  _serialMonitorBufferSize = bufferSize;
+  _serialMonitorBuffer.reserve(bufferSize);
+  _lastSerialUpdate = millis();
+  
+  if (enable && _server) {
+    // Add serial monitor endpoints
+    _server->on("/serial", HTTP_GET, [this](AsyncWebServerRequest *request) { 
+      handleSerialMonitor(request); 
+    });
+    
+    _server->on("/serial_data", HTTP_GET, [this](AsyncWebServerRequest *request) { 
+      handleSerialData(request); 
+    });
+    
+    debug("Serial monitor enabled");
+  }
+}
+
+bool WiFiManager::isSerialMonitorEnabled() const {
+  return _enableSerialMonitor;
+}
+
+String WiFiManager::getSerialMonitorBuffer() const {
+  return _serialMonitorBuffer;
+}
+
+void WiFiManager::handleSerialMonitor(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
+  // Serve the serial monitor page
+  String page = "<html><head>";
+  if (_customHeadElement.length() > 0)
+    page += _customHeadElement;
+  page += "<meta charset='utf-8'><title>Serial Monitor</title>";
+  page += "<meta http-equiv='refresh' content='5'>";
+  page += "<style>pre { background-color: #f5f5f5; padding: 10px; border-radius: 5px; height: 400px; overflow-y: scroll; }</style>";
+  page += "</head><body>";
+  page += "<h1>Serial Monitor</h1>";
+  page += "<pre id='serial-output'>" + _serialMonitorBuffer + "</pre>";
+  page += "<script>";
+  page += "const output = document.getElementById('serial-output');";
+  page += "output.scrollTop = output.scrollHeight;";
+  page += "function updateSerial() {";
+  page += "  fetch('/serial_data').then(response => response.text()).then(data => {";
+  page += "    output.textContent = data;";
+  page += "    output.scrollTop = output.scrollHeight;";
+  page += "  });";
+  page += "}";
+  page += "setInterval(updateSerial, 1000);";
+  page += "</script>";
+  page += "</body></html>";
+  request->send(200, "text/html", page);
+}
+
+void WiFiManager::handleSerialData(AsyncWebServerRequest *request) {
+  if (_useAuth && !checkAuthentication(request)) {
+    return;
+  }
+  
+  updateSerialBuffer();
+  request->send(200, "text/plain", _serialMonitorBuffer);
+}
+
+void WiFiManager::updateSerialBuffer() {
+  // Only update if enough time has passed since last update
+  if (millis() - _lastSerialUpdate < 100) {
+    return;
+  }
+  
+  _lastSerialUpdate = millis();
+  
+  // Read data from Serial
+  while (Serial.available() && _serialMonitorBuffer.length() < _serialMonitorBufferSize) {
+    char c = Serial.read();
+    _serialMonitorBuffer += c;
+  }
+  
+  // Trim buffer if it exceeds the maximum size
+  if (_serialMonitorBuffer.length() > _serialMonitorBufferSize) {
+    _serialMonitorBuffer = _serialMonitorBuffer.substring(_serialMonitorBuffer.length() - _serialMonitorBufferSize);
+  }
 }

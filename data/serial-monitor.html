@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ModernWifi - Serial Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dark-mode.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <style>
+    :root {
+      --terminal-bg: #1a1a1a;
+      --terminal-text: #f0f0f0;
+      --terminal-green: #0f0;
+      --terminal-prompt: #0f0;
+      --terminal-cursor: #0f0;
+      --terminal-selection: rgba(29, 233, 182, 0.3);
+      --terminal-header: #2d2d2d;
+      --terminal-border: #444;
+      --terminal-toolbar: #333;
+    }
+    
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    .dark-mode body {
+      background-color: #121212;
+      color: #f0f0f0;
+    }
+    
+    .terminal-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+    
+    .terminal-header {
+      background: var(--terminal-header);
+      padding: 0.5rem 1rem;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--terminal-border);
+    }
+    
+    .terminal-title {
+      color: #f0f0f0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+    
+    .terminal-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .terminal-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    .terminal-close {
+      background-color: #ff5f56;
+    }
+    
+    .terminal-minimize {
+      background-color: #ffbd2e;
+    }
+    
+    .terminal-maximize {
+      background-color: #27c93f;
+    }
+    
+    .terminal-toolbar {
+      background: var(--terminal-toolbar);
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--terminal-border);
+    }
+    
+    .toolbar-btn {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #f0f0f0;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .toolbar-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .terminal {
+      flex: 1;
+      background-color: var(--terminal-bg);
+      color: var(--terminal-text);
+      font-family: 'Courier New', monospace;
+      padding: 0.5rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border-bottom-left-radius: 0.5rem;
+      border-bottom-right-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    
+    .terminal-content {
+      min-height: 100%;
+      padding-bottom: 2rem;
+    }
+    
+    .terminal-line {
+      line-height: 1.5;
+      animation: fadeIn 0.1s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .terminal-prompt {
+      color: var(--terminal-prompt);
+      margin-right: 0.5rem;
+    }
+    
+    .terminal-timestamp {
+      color: #888;
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+    }
+    
+    .terminal-error {
+      color: #ff5f56;
+    }
+    
+    .terminal-warning {
+      color: #ffbd2e;
+    }
+    
+    .terminal-success {
+      color: #27c93f;
+    }
+    
+    .terminal-info {
+      color: #58a6ff;
+    }
+    
+    .terminal-input-area {
+      display: flex;
+      padding: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid var(--terminal-border);
+    }
+    
+    .terminal-input-prompt {
+      color: var(--terminal-prompt);
+      margin-right: 0.5rem;
+      user-select: none;
+    }
+    
+    .terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--terminal-text);
+      font-family: 'Courier New', monospace;
+      outline: none;
+      caret-color: var(--terminal-cursor);
+    }
+    
+    .terminal-cursor {
+      display: inline-block;
+      width: 0.5rem;
+      height: 1rem;
+      background-color: var(--terminal-cursor);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    .terminal-selection {
+      background-color: var(--terminal-selection);
+    }
+    
+    /* Scrollbar styling */
+    .terminal::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .terminal::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .terminal::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    
+    .terminal::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Matrix rain effect */
+    .matrix-rain {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: 0;
+    }
+    
+    .terminal-content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Command history dropdown */
+    .command-history-dropdown {
+      position: absolute;
+      bottom: 3rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      background-color: #2d2d2d;
+      border: 1px solid var(--terminal-border);
+      border-radius: 0.25rem;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+    }
+    
+    .command-history-item {
+      padding: 0.5rem;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .command-history-item:hover,
+    .command-history-item.selected {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Connection status indicator */
+    .connection-status {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      margin-right: 1rem;
+    }
+    
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+    
+    .status-connected {
+      background-color: #27c93f;
+      box-shadow: 0 0 5px #27c93f;
+    }
+    
+    .status-disconnected {
+      background-color: #ff5f56;
+      box-shadow: 0 0 5px #ff5f56;
+    }
+    
+    /* Baud rate selector */
+    .baud-rate-selector {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #f0f0f0;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      outline: none;
+    }
+    
+    .baud-rate-selector option {
+      background-color: #2d2d2d;
+    }
+    
+    /* Retro boot sequence */
+    .boot-sequence {
+      color: var(--terminal-green);
+      font-family: 'Courier New', monospace;
+      line-height: 1.2;
+    }
+    
+    .boot-sequence .progress {
+      display: inline-block;
+      width: 100%;
+      height: 5px;
+      background-color: rgba(255, 255, 255, 0.1);
+      margin: 5px 0;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .boot-sequence .progress-bar {
+      height: 100%;
+      background-color: var(--terminal-green);
+      width: 0%;
+      transition: width 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <div class="terminal-controls">
+        <div class="terminal-btn terminal-close" title="Close"></div>
+        <div class="terminal-btn terminal-minimize" title="Minimize"></div>
+        <div class="terminal-btn terminal-maximize" title="Maximize"></div>
+      </div>
+      <div class="terminal-title">
+        <i class="fas fa-terminal mr-2"></i> ModernWifi Serial Monitor
+      </div>
+      <div class="connection-status">
+        <div class="status-indicator status-disconnected" id="connection-indicator"></div>
+        <span id="connection-text">Disconnected</span>
+      </div>
+    </div>
+    
+    <div class="terminal-toolbar">
+      <button class="toolbar-btn" id="clear-btn">
+        <i class="fas fa-eraser"></i> Clear
+      </button>
+      <button class="toolbar-btn" id="save-btn">
+        <i class="fas fa-save"></i> Save Log
+      </button>
+      <button class="toolbar-btn" id="autoscroll-btn">
+        <i class="fas fa-arrow-down"></i> Autoscroll: ON
+      </button>
+      <button class="toolbar-btn" id="timestamp-btn">
+        <i class="fas fa-clock"></i> Timestamps: OFF
+      </button>
+      <button class="toolbar-btn" id="matrix-btn">
+        <i class="fas fa-code"></i> Matrix Mode
+      </button>
+      <div class="ml-auto flex items-center">
+        <span class="text-xs text-gray-400 mr-2">Baud Rate:</span>
+        <select class="baud-rate-selector" id="baud-rate">
+          <option value="9600">9600</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="57600">57600</option>
+          <option value="115200" selected>115200</option>
+          <option value="230400">230400</option>
+          <option value="460800">460800</option>
+          <option value="921600">921600</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="terminal" id="terminal">
+      <canvas id="matrix-canvas" class="matrix-rain"></canvas>
+      <div class="terminal-content" id="terminal-content">
+        <div class="boot-sequence">
+          ModernWifi Serial Monitor v1.1.0<br>
+          Copyright (c) 2023 ModernWifi<br>
+          <br>
+          Initializing serial connection...<br>
+          <div class="progress">
+            <div class="progress-bar" id="boot-progress"></div>
+          </div>
+          <span id="boot-status">Connecting...</span>
+        </div>
+      </div>
+      <div class="command-history-dropdown" id="command-history-dropdown"></div>
+    </div>
+    
+    <div class="terminal-input-area">
+      <span class="terminal-input-prompt">></span>
+      <input type="text" class="terminal-input" id="terminal-input" placeholder="Type a command and press Enter...">
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const terminal = document.getElementById('terminal');

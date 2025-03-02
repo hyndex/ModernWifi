@@ -76,6 +76,11 @@ struct WiFiManagerConfig {
   unsigned long connectTimeout = 10000;       // in milliseconds
   unsigned long configPortalTimeout = 180000;   // in milliseconds (3 minutes)
   bool autoReconnect = true;
+  bool useAuth = false;                       // Enable authentication for the portal
+  String portalUsername = "";                // Username for portal authentication
+  String portalPassword = "";                // Password for portal authentication
+  bool enableSerialMonitor = false;          // Enable serial monitor in the portal
+  unsigned int serialMonitorBufferSize = 5000; // Buffer size for serial monitor
 };
 
 class WiFiManager {
@@ -122,6 +127,15 @@ public:
   void setSSLCredentials(const char* cert, const char* key);
 #endif
 
+  // Authentication support.
+  void setAuthentication(bool enable, const char* username = "", const char* password = "");
+  bool isAuthenticationEnabled() const;
+  
+  // Serial monitor support.
+  void enableSerialMonitor(bool enable, unsigned int bufferSize = 5000);
+  bool isSerialMonitorEnabled() const;
+  String getSerialMonitorBuffer() const;
+
   // JSON API endpoints are built into HTTP handlers.
   // Additionally, scanNetworks() is provided to scan for available networks.
   std::vector<WiFiNetwork> scanNetworks(bool forceScan = false);
@@ -151,6 +165,19 @@ private:
 #endif
   unsigned long _configPortalStart;
   uint8_t _lastConxResult;
+  
+  // Authentication variables
+  bool _useAuth;
+  String _portalUsername;
+  String _portalPassword;
+  
+  // Serial monitor variables
+#ifdef ENABLE_SERIAL_MONITOR
+  bool _enableSerialMonitor;
+  String _serialMonitorBuffer;
+  unsigned int _serialMonitorBufferSize;
+  unsigned long _lastSerialUpdate;
+#endif
 
   // Internal HTTP handlers.
   void handleRoot(AsyncWebServerRequest *request);
@@ -161,6 +188,16 @@ private:
   // JSON endpoints.
   void handleStatusJSON(AsyncWebServerRequest *request);
   void handleParamsJSON(AsyncWebServerRequest *request);
+  
+#ifdef ENABLE_SERIAL_MONITOR
+  // Serial monitor endpoints
+  void handleSerialMonitor(AsyncWebServerRequest *request);
+  void handleSerialData(AsyncWebServerRequest *request);
+  void updateSerialBuffer();
+#endif
+
+  // Authentication helper
+  bool checkAuthentication(AsyncWebServerRequest *request);
 
   // Internal helper methods.
   void debug(String msg);
