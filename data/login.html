@@ -73,15 +73,25 @@
       border-radius: 0.5rem;
       border: 2px solid #E5E7EB;
       transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.9);
+      height: 3.25rem;
+      font-size: 1rem;
     }
     
     .input-field:focus {
       border-color: #3B82F6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+      background-color: white;
+      outline: none;
+    }
+    
+    .input-field:hover {
+      border-color: #60A5FA;
     }
     
     .input-field:focus + .input-icon {
       color: #3B82F6;
+      transform: translateY(-50%) scale(1.1);
     }
     
     .login-btn {
@@ -108,6 +118,52 @@
     
     .login-btn:hover::after {
       left: 100%;
+    }
+    
+    .btn-shine {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: btn-shine 3s infinite;
+    }
+    
+    @keyframes btn-shine {
+      0% { left: -100%; }
+      20% { left: 100%; }
+      100% { left: 100%; }
+    }
+    
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #6B7280;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .password-toggle:hover {
+      color: #3B82F6;
+    }
+    
+    .input-focus-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      width: 0;
+      background: linear-gradient(90deg, #3B82F6, #4F46E5);
+      transition: width 0.3s ease;
+    }
+    
+    .input-field:focus ~ .input-focus-indicator {
+      width: 100%;
     }
     
     .login-btn:hover {
@@ -162,13 +218,18 @@
       <div class="p-8">
         <form id="login-form" class="space-y-6">
           <div class="input-group">
-            <input type="text" id="username" name="username" class="input-field w-full px-4 py-3" placeholder="Username" required>
+            <input type="text" id="username" name="username" class="input-field w-full px-4 py-3" placeholder="Username" required autocomplete="username">
             <i class="fas fa-user input-icon"></i>
+            <div class="input-focus-indicator"></div>
           </div>
           
           <div class="input-group">
-            <input type="password" id="password" name="password" class="input-field w-full px-4 py-3" placeholder="Password" required>
+            <input type="password" id="password" name="password" class="input-field w-full px-4 py-3" placeholder="Password" required autocomplete="current-password">
             <i class="fas fa-lock input-icon"></i>
+            <div class="input-focus-indicator"></div>
+            <button type="button" id="toggle-password" class="password-toggle" aria-label="Toggle password visibility">
+              <i class="fas fa-eye"></i>
+            </button>
           </div>
           
           <div class="flex items-center justify-between">
@@ -183,8 +244,9 @@
           </div>
           
           <div>
-            <button type="submit" class="login-btn w-full flex justify-center">
+            <button type="submit" class="login-btn w-full flex justify-center items-center py-3">
               <i class="fas fa-sign-in-alt mr-2"></i> Sign in
+              <span class="btn-shine"></span>
             </button>
           </div>
         </form>
@@ -301,6 +363,35 @@
         } else {
           localStorage.setItem('theme', 'light');
           themeToggle.innerHTML = '<i class="fas fa-moon"></i> <span class="theme-text">Dark Mode</span>';
+        }
+      });
+      
+      // Password visibility toggle
+      const togglePassword = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('password');
+      
+      togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+      });
+      
+      // Input animation
+      const inputFields = document.querySelectorAll('.input-field');
+      inputFields.forEach(input => {
+        input.addEventListener('focus', () => {
+          input.parentElement.classList.add('input-active');
+        });
+        
+        input.addEventListener('blur', () => {
+          if (!input.value) {
+            input.parentElement.classList.remove('input-active');
+          }
+        });
+        
+        // Check if input has value on page load
+        if (input.value) {
+          input.parentElement.classList.add('input-active');
         }
       });
       

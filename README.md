@@ -56,8 +56,11 @@ A production-ready WiFi connection manager for ESP32 and RP2040 with captive por
 - **Cross-Platform Support**: Works on ESP32 variants and RP2040 (Raspberry Pi Pico W)
 - **Memory Management**: Proper cleanup of resources to prevent memory leaks
 - **Filesystem Resilience**: Automatic recovery from filesystem mount failures
-- **Authentication**: Secure portal access with username/password protection
-- **Serial Monitor**: Web-based terminal-style serial monitor for remote debugging
+- **Authentication**: Secure portal access with username/password protection with modern UI
+- **Serial Monitor**: Web-based terminal-style serial monitor for remote debugging with syntax highlighting
+- **Dark Mode Support**: Elegant dark mode across all interfaces
+- **Responsive Design**: Mobile-friendly interface that works on all devices
+- **Visual Feedback**: Intuitive visual cues and animations for better user experience
 
 ## 🔄 What's New in v1.1.0
 
@@ -406,6 +409,17 @@ if (wifiManager.isAuthenticationEnabled()) {
 }
 ```
 
+The login interface features:
+- Modern, responsive design with animated elements
+- Dark mode support
+- Password visibility toggle
+- Visual feedback on input focus
+- Animated particle background
+- Secure credential handling
+
+![Login Interface](screenshots/login.png)
+*The secure login interface with animated particle background*
+
 ### Serial Monitor
 
 The web-based serial monitor allows you to view device logs remotely:
@@ -429,6 +443,9 @@ The serial monitor features:
 - Auto-scroll option
 - Matrix-style visual effect toggle
 - Log saving functionality
+
+![Terminal Monitor](screenshots/terminal.png)
+*The terminal-style serial monitor with syntax highlighting and command history*
 
 ### UI Customization
 

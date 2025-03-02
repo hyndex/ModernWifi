@@ -111,6 +111,37 @@
       background-color: rgba(255, 255, 255, 0.2);
     }
     
+    .tooltip-container {
+      position: relative;
+    }
+    
+    .tooltip {
+      position: absolute;
+      bottom: -2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 10;
+    }
+    
+    .tooltip-container:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .toolbar-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
     .terminal {
       flex: 1;
       background-color: var(--terminal-bg);
@@ -354,22 +385,33 @@
     </div>
     
     <div class="terminal-toolbar">
-      <button class="toolbar-btn" id="clear-btn">
-        <i class="fas fa-eraser"></i> Clear
-      </button>
-      <button class="toolbar-btn" id="save-btn">
-        <i class="fas fa-save"></i> Save Log
-      </button>
-      <button class="toolbar-btn" id="autoscroll-btn">
-        <i class="fas fa-arrow-down"></i> Autoscroll: ON
-      </button>
-      <button class="toolbar-btn" id="timestamp-btn">
-        <i class="fas fa-clock"></i> Timestamps: OFF
-      </button>
-      <button class="toolbar-btn" id="matrix-btn">
-        <i class="fas fa-code"></i> Matrix Mode
-      </button>
-      <div class="ml-auto flex items-center">
+      <div class="toolbar-group">
+        <button class="toolbar-btn tooltip-container" id="clear-btn">
+          <i class="fas fa-eraser"></i> Clear
+          <span class="tooltip">Clear terminal output</span>
+        </button>
+        <button class="toolbar-btn tooltip-container" id="save-btn">
+          <i class="fas fa-save"></i> Save Log
+          <span class="tooltip">Save terminal output to file</span>
+        </button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button class="toolbar-btn tooltip-container" id="autoscroll-btn">
+          <i class="fas fa-arrow-down"></i> Autoscroll: ON
+          <span class="tooltip">Toggle automatic scrolling</span>
+        </button>
+        <button class="toolbar-btn tooltip-container" id="timestamp-btn">
+          <i class="fas fa-clock"></i> Timestamps: OFF
+          <span class="tooltip">Show/hide timestamps</span>
+        </button>
+        <button class="toolbar-btn tooltip-container" id="matrix-btn">
+          <i class="fas fa-code"></i> Matrix Mode
+          <span class="tooltip">Toggle Matrix rain effect</span>
+        </button>
+      </div>
+      
+      <div class="toolbar-group ml-auto flex items-center">
         <span class="text-xs text-gray-400 mr-2">Baud Rate:</span>
         <select class="baud-rate-selector" id="baud-rate">
           <option value="9600">9600</option>
@@ -403,7 +445,12 @@
     
     <div class="terminal-input-area">
       <span class="terminal-input-prompt">></span>
-      <input type="text" class="terminal-input" id="terminal-input" placeholder="Type a command and press Enter...">
+      <input type="text" class="terminal-input" id="terminal-input" placeholder="Type a command and press Enter..." autocomplete="off" spellcheck="false">
+      <div class="terminal-input-hints">
+        <span class="hint"><kbd>↑</kbd><kbd>↓</kbd> Command history</span>
+        <span class="hint"><kbd>Tab</kbd> Show all commands</span>
+        <span class="hint"><kbd>Enter</kbd> Execute</span>
+      </div>
     </div>
   </div>
   
