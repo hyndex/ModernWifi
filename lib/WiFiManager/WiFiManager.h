@@ -12,12 +12,20 @@
 #elif defined(ARDUINO_ARCH_RP2040)
   // RP2040 (Raspberry Pi Pico W, RP2350)
   #include <WiFi.h>
-  #include <LittleFS.h>
   #define USING_RP2040
   // Use appropriate libraries for RP2040
   #include <AsyncTCP_RP2040W.h>
   #include <ESPAsyncWebServer.h>
-  #define SPIFFS LittleFS
+  // Include LittleFS with proper error handling
+  #if __has_include(<LittleFS.h>)
+    #include <LittleFS.h>
+    #define SPIFFS LittleFS
+  #else
+    // Fallback to using the Arduino-Pico core's filesystem
+    #include <FS.h>
+    #include <FSImpl.h>
+    #define SPIFFS FS
+  #endif
 #elif defined(ARDUINO_ARCH_AVR)
   // Atmel AVR microcontrollers
   #define USING_AVR

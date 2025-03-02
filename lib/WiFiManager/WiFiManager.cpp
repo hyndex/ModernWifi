@@ -75,20 +75,32 @@ void WiFiManager::begin() {
     debug("SPIFFS mounted successfully");
   }
 #elif defined(USING_RP2040)
-  fsInitialized = SPIFFS.begin();
-  if (!fsInitialized) {
-    debug("An error occurred while mounting LittleFS");
-    // Try to format and mount again
-    debug("Attempting to format and mount LittleFS...");
-    if (SPIFFS.format() && SPIFFS.begin()) {
-      fsInitialized = true;
-      debug("LittleFS formatted and mounted successfully");
+  // For RP2040, we need to be more careful with filesystem initialization
+  #if __has_include(<LittleFS.h>)
+    fsInitialized = SPIFFS.begin();
+    if (!fsInitialized) {
+      debug("An error occurred while mounting LittleFS");
+      // Try to format and mount again
+      debug("Attempting to format and mount LittleFS...");
+      if (SPIFFS.format() && SPIFFS.begin()) {
+        fsInitialized = true;
+        debug("LittleFS formatted and mounted successfully");
+      } else {
+        debug("LittleFS format failed. Web interface may not work properly.");
+      }
     } else {
-      debug("LittleFS format failed. Web interface may not work properly.");
+      debug("LittleFS mounted successfully");
     }
-  } else {
-    debug("LittleFS mounted successfully");
-  }
+  #else
+    // Fallback for Arduino-Pico core's filesystem
+    fsInitialized = SPIFFS.begin();
+    if (!fsInitialized) {
+      debug("An error occurred while mounting filesystem");
+      debug("Web interface may not work properly.");
+    } else {
+      debug("Filesystem mounted successfully");
+    }
+  #endif
 #elif defined(USING_AVR) || defined(USING_STM32) || defined(USING_NXP)
   fsInitialized = SPIFFS.begin();
   if (!fsInitialized) {
