@@ -70,11 +70,34 @@ A production-ready WiFi connection manager for ESP32 and RP2040 with captive por
 1. Add ModernWifi to your `platformio.ini` file:
 
 ```ini
+[env]
+; Common settings for all environments
+framework = arduino
+monitor_speed = 115200
+
+; Common library dependencies
 lib_deps =
-    bblanchon/ArduinoJson @ ^6.21.3
-    me-no-dev/AsyncTCP @ ^1.1.1
-    https://github.com/me-no-dev/ESPAsyncWebServer.git
-    # Add ModernWifi repository URL here
+    https://github.com/bblanchon/ArduinoJson
+    DNSServer
+    ; Add ModernWifi repository URL here
+
+[env:esp32]
+platform = espressif32
+board = esp32dev
+lib_deps =
+    ${env.lib_deps}
+    https://github.com/ESP32Async/AsyncTCP
+    https://github.com/ESP32Async/ESPAsyncWebServer
+    Update
+    FS
+    SPIFFS
+build_flags = 
+    -DUSE_HTTPS
+    -DWEBSERVER_HTTPS
+    -DENABLE_MDNS
+    -DENABLE_STATISTICS
+    -DENABLE_CUSTOM_PARAMETERS
+board_build.filesystem = spiffs
 ```
 
 2. Include the necessary headers in your code:
@@ -95,7 +118,7 @@ ModernWifi is designed to work on multiple platforms. Here's how to compile for 
 pio run -e esp32
 ```
 
-This will compile the project for ESP32 with all features enabled, including HTTPS and mDNS support.
+This will compile the project for ESP32 with all features enabled, including HTTPS, mDNS support, statistics tracking, and custom parameters. The ESP32 environment uses SPIFFS for filesystem storage and includes the AsyncTCP and ESPAsyncWebServer libraries.
 
 #### ESP32-S3 (Fully Supported)
 
@@ -103,19 +126,50 @@ This will compile the project for ESP32 with all features enabled, including HTT
 pio run -e esp32-s3-devkitc-1
 ```
 
-#### RP2040 (Partial Support)
+The ESP32-S3 environment extends the ESP32 configuration, inheriting all its settings while specifying the appropriate board.
 
-The Raspberry Pi Pico W support is currently in development. Some features may not work correctly due to platform-specific limitations.
+#### RP2040 (Raspberry Pi Pico W - Partial Support)
 
 ```bash
 pio run -e pico
 ```
 
+The RP2040 environment uses LittleFS instead of SPIFFS and includes platform-specific libraries (AsyncTCP_RP2040W and AsyncWebServer_RP2040W). It supports statistics tracking and custom parameters but does not include HTTPS or mDNS support due to platform limitations.
+
 **Note:** When compiling for RP2040, you may encounter issues with WiFi libraries and filesystem support. We're actively working to improve compatibility.
 
-#### Other Platforms
+#### Other Platforms (Experimental)
 
-The library includes configurations for AVR, STM32, and NXP platforms in the platformio.ini file, but these are currently experimental and may require additional modifications to work correctly.
+The library includes configurations for AVR, STM32, and NXP platforms in the platformio.ini file, but these are currently experimental. To use these platforms, uncomment the relevant sections in platformio.ini and adjust as needed:
+
+```ini
+; AVR environment (Arduino Uno, etc.)
+[env:avr]
+platform = atmelavr
+board = uno
+lib_deps =
+    ${env.lib_deps}
+    WiFi101
+    SD
+
+; STM32 environment
+[env:stm32]
+platform = ststm32
+board = nucleo_f401re
+lib_deps =
+    ${env.lib_deps}
+    STM32duino WiFi
+    SD
+
+; NXP environment
+[env:nxp]
+platform = nxplpc
+board = lpc1768
+lib_deps =
+    ${env.lib_deps}
+    WiFi
+    SD
+```
 
 ### Arduino IDE
 
