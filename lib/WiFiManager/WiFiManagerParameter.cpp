@@ -19,6 +19,7 @@ const char* WiFiManagerParameter::getLabel() const { return _label.c_str(); }
 const char* WiFiManagerParameter::getValue() const { return _value.c_str(); }
 ParameterType WiFiManagerParameter::getType() const { return _type; }
 const char* WiFiManagerParameter::getCustomAttributes() const { return _customAttributes.c_str(); }
+const char* WiFiManagerParameter::getCustomHTML() const { return _customHTML.c_str(); }
 int WiFiManagerParameter::getLabelPlacement() const { return _labelPlacement; }
 
 // Setters
@@ -98,11 +99,12 @@ bool WiFiManagerParameter::validateValue(const char* value) const {
             // These are validated by the browser's input controls
             return true;
             
-        case ParameterType::COLOR:
+        case ParameterType::COLOR: {
             // Basic color validation (hex format: #RRGGBB or #RGB)
             if (*value != '#') return false;
             size_t len = strlen(value);
             return (len == 7 || len == 4) && (value[1] != '\0');
+        }
             
         default:
             return true; // Text, password, search, hidden, file, and textarea don't need specific validation

@@ -41,6 +41,7 @@ public:
     const char* getValue() const;
     ParameterType getType() const;
     const char* getCustomAttributes() const;
+    const char* getCustomHTML() const;
     int getLabelPlacement() const;
     bool isValid() const;
     
@@ -60,6 +61,7 @@ private:
     String _value;
     ParameterType _type;
     String _customAttributes;
+    String _customHTML;
     int _length;
     int _labelPlacement;
     std::function<bool(const char*)> _validator;

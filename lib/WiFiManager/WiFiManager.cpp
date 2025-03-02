@@ -1,4 +1,5 @@
 #include "WiFiManager.h"
+#include "WiFiManagerParameter.h"
 #include <Arduino.h>
 #include <cstring>
 
@@ -8,18 +9,6 @@
   // Using AsyncWebServer with HTTPS support
   #include <AsyncWebServerSecure.h>
 #endif
-
-// ----- WiFiManagerParameter Implementation -----
-WiFiManagerParameter::WiFiManagerParameter(const char* id, const char* label, const char* defaultValue, int length, const char* customHTML, int labelPlacement)
-  : _id(id), _label(label), _value(defaultValue), _length(length), _customHTML(customHTML), _labelPlacement(labelPlacement) {}
-
-const char* WiFiManagerParameter::getID() const { return _id.c_str(); }
-const char* WiFiManagerParameter::getLabel() const { return _label.c_str(); }
-const char* WiFiManagerParameter::getValue() const { return _value.c_str(); }
-void WiFiManagerParameter::setValue(const char* value) { _value = value; }
-const char* WiFiManagerParameter::getCustomHTML() const { return _customHTML.c_str(); }
-const char* WiFiManagerParameter::getCustomAttributes() const { return _customAttributes.c_str(); }
-int WiFiManagerParameter::getLabelPlacement() const { return _labelPlacement; }
 
 // ----- WiFiManager Implementation -----
 WiFiManager::WiFiManager(const WiFiManagerConfig& config)
@@ -47,7 +36,7 @@ void WiFiManager::debug(String msg) {
 }
 
 void WiFiManager::begin() {
-#ifdef USE_HTTPS
+#if defined(USE_HTTPS) && defined(HAS_ASYNC_WEBSERVER_SECURE)
   if (_useHTTPS) {
     _server = new AsyncWebServerSecure(_config.httpPort);
     // Set SSL certificates if available
@@ -224,7 +213,8 @@ bool WiFiManager::startConfigPortal(const char* apName, const char* apPassword) 
 }
 
 void WiFiManager::stopConfigPortal() {
-  _server->stop();
+  // AsyncWebServer doesn't have a stop method, so we'll just stop the DNS server
+  // and reset the config portal start time
   _dnsServer.stop();
   _configPortalStart = 0;
   debug("Config portal stopped.");
