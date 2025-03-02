@@ -604,3 +604,4 @@ void WiFiManager::updateSerialBuffer() {
     _serialMonitorBuffer = _serialMonitorBuffer.substring(_serialMonitorBuffer.length() - _serialMonitorBufferSize);
   }
 }
+#endif // ENABLE_SERIAL_MONITOR
