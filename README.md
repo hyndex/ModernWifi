@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
 [![Platform: ESP32|RP2040](https://img.shields.io/badge/Platform-ESP32%7CRP2040-green.svg)](https://www.espressif.com/en/products/socs/esp32)  
 [![Framework: Arduino](https://img.shields.io/badge/Framework-Arduino-blue.svg)](https://www.arduino.cc/)  
-[![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-brightgreen.svg)](https://github.com/yourusername/ModernWifi/releases)
+[![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-brightgreen.svg)](https://github.com/hyndex/ModernWifi/releases)
 
 ModernWifi is a production–ready WiFi connection manager designed for ESP32 and RP2040 devices (with experimental support for AVR, STM32, and NXP). It not only handles WiFi provisioning through an intuitive captive portal but also integrates a full suite of advanced features—including over–the–air firmware updates, file system management, backup/restore functionality, multi–credential support, localization, real–time logging via WebSockets, an interactive terminal interface, mDNS, HTTPS, and secure authentication. Best of all, every feature is fully modular and configurable at compile–time using build flags, allowing you to tailor the firmware to exactly what you need.
 
