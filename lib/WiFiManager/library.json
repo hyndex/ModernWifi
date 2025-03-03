@@ -1,22 +1,21 @@
 {
-    "name": "WiFiManager",
-    "version": "1.0.0",
-    "keywords": "wifi, captive portal, esp32, mdns, https, json, configuration",
-    "description": "Production-ready WiFi connection manager with optional captive portal, mDNS, HTTPS, and JSON API endpoints.",
-    "authors": [
-      {
-        "name": "Chinmoy Bhuyan",
-        "email": "dikibhuyan@gmail.com"
-      }
-    ],
-    "license": "MIT",
-    "frameworks": "arduino",
-    "platforms": [
-      "espressif32",
-      "raspberrypi",
-      "atmelavr",
-      "ststm32",
-      "nxplpc"
-    ]
-  }
-  
+  "name": "WiFiManager",
+  "version": "1.0.0",
+  "keywords": "wifi, captive portal, esp32, mdns, https, json, configuration, ota, filesystem, backup",
+  "description": "Comprehensive WiFi connection manager with captive portal, OTA updates, file explorer, backup/restore, multi-credential support, device diagnostics, customizable parameters (with grouping & localization) and optional real-time logging.",
+  "authors": [
+    {
+      "name": "Chinmoy Bhuyan",
+      "email": "dikibhuyan@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif32",
+    "raspberrypi",
+    "atmelavr",
+    "ststm32",
+    "nxplpc"
+  ]
+}

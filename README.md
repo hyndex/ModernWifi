@@ -1,753 +1,401 @@
 # ModernWifi
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform: ESP32|RP2040](https://img.shields.io/badge/Platform-ESP32%7CRP2040-green.svg)](https://www.espressif.com/en/products/socs/esp32)
-[![Framework: Arduino](https://img.shields.io/badge/Framework-Arduino-blue.svg)](https://www.arduino.cc/)
-[![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-brightgreen.svg)](https://github.com/yourusername/ModernWifi/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
+[![Platform: ESP32|RP2040](https://img.shields.io/badge/Platform-ESP32%7CRP2040-green.svg)](https://www.espressif.com/en/products/socs/esp32)  
+[![Framework: Arduino](https://img.shields.io/badge/Framework-Arduino-blue.svg)](https://www.arduino.cc/)  
+[![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-brightgreen.svg)](https://github.com/yourusername/ModernWifi/releases)
 
-A production-ready WiFi connection manager for ESP32 and RP2040 with captive portal, mDNS, HTTPS, secure authentication, and a sleek terminal-style serial monitor.
+ModernWifi is a production–ready WiFi connection manager designed for ESP32 and RP2040 devices (with experimental support for AVR, STM32, and NXP). It not only handles WiFi provisioning through an intuitive captive portal but also integrates a full suite of advanced features—including over–the–air firmware updates, file system management, backup/restore functionality, multi–credential support, localization, real–time logging via WebSockets, an interactive terminal interface, mDNS, HTTPS, and secure authentication. Best of all, every feature is fully modular and configurable at compile–time using build flags, allowing you to tailor the firmware to exactly what you need.
 
-## 📋 Table of Contents
+---
+
+## Table of Contents
 
 - [Features](#features)
-- [What's New in v1.1.0](#whats-new-in-v110)
+- [What's New in v1.2.0](#whats-new-in-v120)
+- [Architecture & Modular Design](#architecture--modular-design)
 - [Installation](#installation)
   - [PlatformIO (Recommended)](#platformio-recommended)
   - [Arduino IDE](#arduino-ide)
   - [Cross-Platform Compilation](#cross-platform-compilation)
+- [Compilation Modes & Build Flags](#compilation-modes--build-flags)
 - [Quick Start](#quick-start)
 - [User Manual](#user-manual)
   - [Basic Usage](#basic-usage)
   - [Configuration Portal](#configuration-portal)
-  - [Custom Parameters](#custom-parameters)
+  - [Custom Parameters & Grouping](#custom-parameters--grouping)
   - [Callbacks](#callbacks)
-  - [Static IP Configuration](#static-ip-configuration)
-  - [mDNS Support](#mdns-support)
-  - [HTTPS Support](#https-support)
-  - [Authentication](#authentication)
-  - [Serial Monitor](#serial-monitor)
-  - [UI Customization](#ui-customization)
+  - [Static IP & mDNS](#static-ip--mdns)
+  - [HTTPS & Authentication](#https--authentication)
+  - [Serial Monitor & Terminal Interface](#serial-monitor--terminal-interface)
+  - [OTA Updates, File Explorer, and Backup/Restore](#ota-updates-file-explorer-and-backuprestore)
+  - [Localization & UI Customization](#localization--ui-customization)
 - [API Reference](#api-reference)
-  - [WiFiManager Class](#wifimanager-class)
-  - [WiFiManagerParameter Class](#wifimanagerparameter-class)
-  - [WiFiManagerConfig Struct](#wifimanagerconfig-struct)
-- [Customization](#customization)
-  - [Build Flags](#build-flags)
-  - [Web Interface](#web-interface)
-  - [Parameter Types](#parameter-types)
 - [Examples](#examples)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
 
-## ✨ Features
+---
 
-- **Easy WiFi Configuration**: Set up WiFi credentials without hardcoding
-- **Captive Portal**: User-friendly configuration interface
-- **Custom Parameters**: Add your own configuration fields
-- **Persistent Storage**: Save settings to flash memory
-- **Automatic Reconnection**: Handles connection drops gracefully
-- **mDNS Support**: Access your device via hostname.local
-- **HTTPS Support**: Secure web interface (optional)
-- **JSON API**: Programmatic access to configuration
-- **Modern UI**: Clean interface with Tailwind CSS
-- **Multiple Parameter Types**: Support for various input types (text, number, color, etc.)
-- **Validation**: Built-in and custom validation for parameters
-- **Cross-Platform Support**: Works on ESP32 variants and RP2040 (Raspberry Pi Pico W)
-- **Memory Management**: Proper cleanup of resources to prevent memory leaks
-- **Filesystem Resilience**: Automatic recovery from filesystem mount failures
-- **Authentication**: Secure portal access with username/password protection with modern UI
-- **Serial Monitor**: Web-based terminal-style serial monitor for remote debugging with syntax highlighting
-- **Dark Mode Support**: Elegant dark mode across all interfaces
-- **Responsive Design**: Mobile-friendly interface that works on all devices
-- **Visual Feedback**: Intuitive visual cues and animations for better user experience
+## Features
 
-## 🔄 What's New in v1.1.0
+ModernWifi is designed to be a one–stop solution for device provisioning and management. Its key features include:
 
-- **Enhanced Platform Support**: Added support for RP2040 (Raspberry Pi Pico W) and improved ESP32 variant compatibility
-- **Memory Management Improvements**: Added proper cleanup of WiFiManagerParameter objects to prevent memory leaks
-- **Platform-Specific Restart Handling**: Implemented platform-specific device restart methods for better compatibility
-- **Filesystem Initialization Improvements**: Added automatic recovery from filesystem mount failures with formatting capability
-- **Parameter Type System**: Enhanced parameter type handling with proper validation
-- **Authentication Support**: Added secure portal access with username/password protection
-- **Serial Monitor**: Added web-based terminal-style serial monitor with syntax highlighting and command history
-- **Compilation Modes**: Added three compilation modes to optimize for different use cases and memory constraints
-- **Bug Fixes**:
-  - Fixed syntax error in WiFiManager.cpp
-  - Resolved compatibility issues between WiFiManager and WiFiManagerParameter classes
-  - Improved error handling throughout the codebase
+- **Modular & Configurable Design**  
+  Every module is controlled by compile–time flags so you can easily build a lightweight or feature–rich version without modifying source code.
+  
+- **Captive Portal & Multiple UI Modes**  
+  Choose between:
+  - **Ultra Light Mode**: API–only (JSON endpoints) for headless devices.
+  - **Light Mode**: Minimal HTML interface with on–the–fly generated pages.
+  - **Normal Mode**: Full–featured branded interface with external assets, dark mode, and advanced UI features.
 
-## 🔧 Compilation Modes
+- **Over–the–Air (OTA) Firmware Updates**  
+  Update your firmware through a dedicated web endpoint. (Stub provided—you can integrate your OTA library.)
 
-ModernWifi now supports three compilation modes to suit different project requirements and memory constraints:
+- **File System Explorer & Backup/Restore**  
+  Browse, upload, and delete files on the onboard filesystem. Easily export and import your device configuration via JSON.
 
-### 1. Ultra Light Mode
-- **Build Flag**: `-DBUILD_MODE_ULTRA_LIGHT`
-- **Description**: API-only mode with no HTML interface, ideal for projects with severe memory constraints
-- **Features**:
-  - JSON API endpoints for programmatic access
-  - Core WiFi connection functionality
-  - Minimal memory footprint
-  - No web assets or HTML interface
-- **Use Case**: Headless IoT devices, sensor nodes, or any project where memory is extremely limited
+- **Multi–Credential Support**  
+  Store and manage multiple WiFi credentials to allow for automatic fallback between networks.
 
-### 2. Light Mode
-- **Build Flag**: `-DBUILD_MODE_LIGHT`
-- **Description**: Simple HTML interface with minimal assets, balancing functionality and memory usage
-- **Features**:
-  - Basic responsive HTML interface generated on-the-fly
-  - Support for all parameter types (text, number, color, etc.)
-  - No external resources (CSS, JS, images)
-  - Reduced memory footprint compared to Normal mode
-- **Use Case**: Projects with moderate memory constraints that still need a user interface
+- **Custom Parameters with Grouping & Validation**  
+  Add extra configuration fields (text, number, color, etc.) that can be grouped logically and validated with built–in or custom logic.
 
-### 3. Normal Mode (Default)
-- **Build Flag**: `-DBUILD_MODE_NORMAL`
-- **Description**: Full-featured interface with branding, modern UI, and all features enabled
-- **Features**:
-  - Modern dashboard with Tailwind CSS
-  - Dark mode support
-  - Custom branding and theming
-  - External resources for enhanced UI
-  - All advanced features (serial monitor, authentication, etc.)
-- **Use Case**: User-facing projects where the interface quality is important
+- **Localization Support**  
+  Easily deploy your device internationally by setting language and localized parameter labels.
 
-To select a mode, uncomment the appropriate build flag in your `platformio.ini` file:
+- **Secure Authentication & HTTPS**  
+  Lock down your captive portal with username/password protection and secure communications using HTTPS (with optional certificate support).
 
-## 📥 Installation
+- **mDNS Support**  
+  Access your device on your local network by its hostname (e.g., `mydevice.local`).
+
+- **Real–Time Logging via WebSockets**  
+  (Optional) Stream live log messages to a web client for debugging and monitoring.
+
+- **Interactive Terminal & Web-Based Serial Monitor**  
+  Remotely view serial logs or interact with your device using a terminal–style interface.
+
+- **Responsive & Modern UI**  
+  Built with modern design principles, including dark mode, custom branding, and Tailwind CSS (in Normal Mode).
+
+---
+
+## What's New in v1.2.0
+
+- **Complete Modular Build**: All advanced features are now controlled by compile–time flags.
+- **OTA & File Management**: New endpoints for OTA firmware updates and file system explorer.
+- **Backup & Restore**: Easily export and import complete device configurations.
+- **Enhanced Multi–Credential & Localization Support**: Manage multiple WiFi credentials and support localized configuration.
+- **Real–Time WebSocket Logging & Terminal Interface**: New real–time log streaming and interactive terminal.
+- **Improved UI & Customization Options**: Fully customizable HTML interfaces with dark mode and branding support.
+- **Advanced Security Enhancements**: Optional HTTPS, mDNS, and authentication for secure deployment.
+
+---
+
+## Architecture & Modular Design
+
+ModernWifi is designed with flexibility in mind. Every module—from the captive portal UI to advanced endpoints (OTA, file explorer, backup/restore, etc.)—is wrapped in preprocessor conditionals. This means that by simply defining (or omitting) a build flag, you can include or exclude features without touching the source code.
+
+### Example Build Flags:
+- `-DENABLE_HTML_INTERFACE`: Enables the HTML-based configuration portal.
+- `-DENABLE_SERIAL_MONITOR`: Includes the web-based serial monitor.
+- `-DENABLE_WEBSOCKETS`: Compiles WebSocket support for real-time logging.
+- `-DENABLE_OTA`: Activates the OTA firmware update endpoint.
+- `-DENABLE_FS_EXPLORER`: Enables the file explorer endpoints.
+- `-DENABLE_BACKUP_RESTORE`: Includes backup and restore configuration endpoints.
+- `-DENABLE_TERMINAL`: Adds an interactive terminal interface.
+- `-DENABLE_MULTI_CRED`: Supports multiple WiFi credentials.
+- `-DENABLE_LOCALIZATION`: Provides localization and language support.
+- `-DENABLE_MDNS`: Includes mDNS support.
+- `-DENABLE_HTTPS`: Activates HTTPS support.
+- `-DENABLE_AUTH`: Enables portal authentication.
+
+These flags are set via the PlatformIO configuration file or your build system.
+
+---
+
+## Installation
 
 ### PlatformIO (Recommended)
 
-1. Add ModernWifi to your `platformio.ini` file:
+1. **Add ModernWifi to Your Project**  
+   Include the library in your `platformio.ini` file along with its dependencies.
 
-```ini
-[env]
-; Common settings for all environments
-framework = arduino
-monitor_speed = 115200
+2. **Configure Build Flags**  
+   Choose your build mode and enable/disable modules by setting build flags (see the provided `platformio.ini` sample).
 
-; Common library dependencies
-lib_deps =
-    https://github.com/bblanchon/ArduinoJson
-    DNSServer
-    ; Add ModernWifi repository URL here
-
-; Build modes - choose one by uncommenting
-; 1. Ultra Light Mode - API only, no HTML interface
-; build_flags = -DBUILD_MODE_ULTRA_LIGHT
-
-; 2. Light Mode - Simple HTML interface with minimal assets
-; build_flags = -DBUILD_MODE_LIGHT
-
-; 3. Normal Mode - Full featured interface with branding (default)
-build_flags = -DBUILD_MODE_NORMAL
-
-[env:esp32]
-platform = espressif32
-board = esp32dev
-lib_deps =
-    ${env.lib_deps}
-    https://github.com/ESP32Async/AsyncTCP
-    https://github.com/ESP32Async/ESPAsyncWebServer
-    Update
-    FS
-    SPIFFS
-build_flags = 
-    -DUSE_HTTPS
-    -DWEBSERVER_HTTPS
-    -DENABLE_MDNS
-    -DENABLE_STATISTICS
-    -DENABLE_CUSTOM_PARAMETERS
-    -DENABLE_SERIAL_MONITOR
-board_build.filesystem = spiffs
-```
-
-2. Include the necessary headers in your code:
-
-```cpp
-#include <Arduino.h>
-#include "WiFiManager.h"
-#include <Preferences.h>
-```
+3. **Include Headers in Your Code**  
+   ```cpp
+   #include <Arduino.h>
+   #include "WiFiManager.h"
+   ```
 
 ### Arduino IDE
 
-1. Download this repository as a ZIP file
-2. In Arduino IDE, go to Sketch > Include Library > Add .ZIP Library
-3. Select the downloaded ZIP file
-4. Install the required dependencies:
-   - ArduinoJson
-   - AsyncTCP
-   - ESPAsyncWebServer
-   - ESP32 Arduino Core
+1. Download the repository as a ZIP file.
+2. In Arduino IDE, navigate to **Sketch > Include Library > Add .ZIP Library**.
+3. Install required dependencies (ArduinoJson, AsyncTCP/AsyncWebServer, etc.).
+4. Configure your build flags via the IDE’s compiler options (if supported) or modify the source flags.
 
 ### Cross-Platform Compilation
 
-ModernWifi is designed to work on multiple platforms. Here's how to compile for different boards using PlatformIO:
+ModernWifi supports:
+- **ESP32 & ESP32-S3**: Fully featured with HTTPS, mDNS, and all advanced modules.
+- **RP2040 (Raspberry Pi Pico W)**: Uses LittleFS and supports core features along with custom parameters.
+- **AVR, STM32, NXP**: Experimental support available in the `platformio.ini` (uncomment and adjust as needed).
 
-#### ESP32 (Fully Supported)
+---
 
-```bash
-pio run -e esp32
-```
+## Compilation Modes & Build Flags
 
-This will compile the project for ESP32 with all features enabled, including HTTPS, mDNS support, statistics tracking, and custom parameters. The ESP32 environment uses SPIFFS for filesystem storage and includes the AsyncTCP and ESPAsyncWebServer libraries.
+ModernWifi supports three compilation modes that define the level of UI and asset inclusion:
+- **Ultra Light Mode** (`-DBUILD_MODE_ULTRA_LIGHT`): API-only, no HTML interface.
+- **Light Mode** (`-DBUILD_MODE_LIGHT`): Basic HTML interface with minimal assets.
+- **Normal Mode** (`-DBUILD_MODE_NORMAL`): Full–featured interface with branding, external CSS/JS, dark mode, etc.
 
-#### ESP32-S3 (Fully Supported)
+Additionally, use the following flags to control advanced features:
+- `-DENABLE_HTML_INTERFACE`
+- `-DENABLE_BRANDING`
+- `-DENABLE_SERIAL_MONITOR`
+- `-DENABLE_WEBSOCKETS`
+- `-DENABLE_OTA`
+- `-DENABLE_FS_EXPLORER`
+- `-DENABLE_BACKUP_RESTORE`
+- `-DENABLE_TERMINAL`
+- `-DENABLE_MULTI_CRED`
+- `-DENABLE_LOCALIZATION`
+- `-DENABLE_MDNS`
+- `-DENABLE_HTTPS`
+- `-DENABLE_AUTH`
 
-```bash
-pio run -e esp32-s3-devkitc-1
-```
+These flags are defined in your `platformio.ini` as shown in the sample configuration.
 
-The ESP32-S3 environment extends the ESP32 configuration, inheriting all its settings while specifying the appropriate board.
+---
 
-#### RP2040 (Raspberry Pi Pico W - Partial Support)
-
-```bash
-pio run -e pico
-```
-
-The RP2040 environment uses LittleFS instead of SPIFFS and includes platform-specific libraries (AsyncTCP_RP2040W and AsyncWebServer_RP2040W). It supports statistics tracking and custom parameters but does not include HTTPS or mDNS support due to platform limitations.
-
-**Note:** When compiling for RP2040, you may encounter issues with WiFi libraries and filesystem support. We're actively working to improve compatibility.
-
-#### Other Platforms (Experimental)
-
-The library includes configurations for AVR, STM32, and NXP platforms in the platformio.ini file, but these are currently experimental. To use these platforms, uncomment the relevant sections in platformio.ini and adjust as needed:
-
-```ini
-; AVR environment (Arduino Uno, etc.)
-[env:avr]
-platform = atmelavr
-board = uno
-lib_deps =
-    ${env.lib_deps}
-    WiFi101
-    SD
-
-; STM32 environment
-[env:stm32]
-platform = ststm32
-board = nucleo_f401re
-lib_deps =
-    ${env.lib_deps}
-    STM32duino WiFi
-    SD
-
-; NXP environment
-[env:nxp]
-platform = nxplpc
-board = lpc1768
-lib_deps =
-    ${env.lib_deps}
-    WiFi
-    SD
-```
-
-## 🚀 Quick Start
+## Quick Start
 
 ```cpp
 #include <Arduino.h>
 #include "WiFiManager.h"
 
-// Create a WiFiManager instance with default configuration
 WiFiManagerConfig config;
+#ifdef ENABLE_AUTH
+config.useAuth = true;
+config.portalUsername = "admin";
+config.portalPassword = "password";
+#endif
+#ifdef ENABLE_SERIAL_MONITOR
+config.enableSerialMonitor = true;
+config.serialMonitorBufferSize = 5000;
+#endif
+
 WiFiManager wifiManager(config);
 
 void setup() {
   Serial.begin(115200);
-  
-  // Initialize WiFiManager
   wifiManager.begin();
   
-  // Start the configuration portal if needed
-  // If no stored credentials or connection fails, this will start a captive portal
+  // Auto-connect: tries stored credentials; if fails, launches the captive portal.
   if (wifiManager.autoConnect("ESP32_AP", "password")) {
     Serial.println("Connected to WiFi!");
   } else {
-    Serial.println("Failed to connect.");
+    Serial.println("Failed to connect. Captive portal is active.");
   }
 }
 
 void loop() {
-  // Required to handle DNS and HTTP requests for the captive portal
   wifiManager.loop();
-  
-  // Your code here
   delay(10);
 }
 ```
 
-## 📖 User Manual
+---
+
+## User Manual
 
 ### Basic Usage
-
-The ModernWifi library provides a simple way to manage WiFi connections on ESP32 devices. It handles the connection process, provides a captive portal for configuration, and offers persistent storage for settings.
-
-#### Initialization
-
-```cpp
-// Create a configuration object
-WiFiManagerConfig config;
-
-// Customize configuration if needed
-config.connectTimeout = 15000;      // 15 seconds to connect to saved WiFi
-config.configPortalTimeout = 180000; // 3 minutes for configuration portal
-config.httpPort = 80;               // Web server port
-config.autoReconnect = true;        // Auto reconnect if connection is lost
-
-// Enable authentication for the portal
-config.useAuth = true;
-config.portalUsername = "admin";
-config.portalPassword = "password";
-
-// Enable serial monitor in the portal
-config.enableSerialMonitor = true;
-config.serialMonitorBufferSize = 5000; // Buffer size for serial monitor
-
-// Create WiFiManager instance with the configuration
-WiFiManager wifiManager(config);
-
-// Initialize WiFiManager
-wifiManager.begin();
-```
-
-#### Connecting to WiFi
-
-```cpp
-// Method 1: Auto-connect (tries saved credentials, starts portal if needed)
-if (wifiManager.autoConnect("ESP32_AP", "password")) {
-  Serial.println("Connected to WiFi!");
-}
-
-// Method 2: Start configuration portal directly
-if (wifiManager.startConfigPortal("ESP32_AP", "password")) {
-  Serial.println("Connected after configuration!");
-}
-
-// Method 3: Connect to a specific network
-if (wifiManager.connectToNetwork("MySSID", "MyPassword")) {
-  Serial.println("Connected to specified network!");
-}
-```
+ModernWifi automatically manages your WiFi connections. It will attempt to reconnect using stored credentials; if unsuccessful, it will launch a captive portal for configuration.
 
 ### Configuration Portal
+- **Modes**: Ultra Light (JSON API), Light (simple HTML), or Normal (full–featured UI).
+- **Functionality**: Scan available networks, enter credentials, and configure custom parameters.
+- **Access**: Automatically launched if connection fails, or manually by calling `startConfigPortal()`.
 
-The configuration portal is a captive portal that allows users to:
-
-1. Select a WiFi network from a list of available networks
-2. Enter the password for the selected network
-3. Configure custom parameters (if defined)
-4. Save the configuration
-
-The portal can be accessed in two ways:
-
-1. Automatically when `autoConnect()` is called and no saved credentials exist or connection fails
-2. Manually by calling `startConfigPortal()`
-
-When active, the portal creates an access point with the specified name and password. Users can connect to this AP and will be redirected to the configuration page.
-
-### Custom Parameters
-
-You can add custom parameters to the configuration portal to allow users to configure additional settings:
-
+### Custom Parameters & Grouping
+- **Adding Fields**: Create custom parameters (e.g., MQTT settings, sensor thresholds).
+- **Grouping**: Optionally group parameters (for example, “WiFi Settings” or “Device Info”) to keep the UI organized.
+- **Validation**: Use built–in validators or provide custom validation functions.
+  
+Example:
 ```cpp
-// Create custom parameters
-WiFiManagerParameter* customMqttServer = new WiFiManagerParameter("mqtt_server", "MQTT Server", "mqtt.example.com", 40);
-WiFiManagerParameter* customMqttPort = new WiFiManagerParameter("mqtt_port", "MQTT Port", "1883", 6);
-
-// Add parameters to WiFiManager
-wifiManager.addParameter(customMqttServer);
-wifiManager.addParameter(customMqttPort);
-
-// Later, retrieve values
-Serial.println(customMqttServer->getValue());
-Serial.println(customMqttPort->getValue());
-```
-
-For advanced parameter types:
-
-```cpp
-// Color picker
-WiFiManagerParameter* customThemeColor = new WiFiManagerParameter("theme_color", "Theme Color", "#2196F3", 10, "type='color'");
-
-// Number input with constraints
-WiFiManagerParameter* customUpdateInterval = new WiFiManagerParameter("update_interval", "Update Interval (s)", "30", 5, "type='number' min='5' max='3600'");
+WiFiManagerParameter* mqttServer = new WiFiManagerParameter("mqtt_server", "MQTT Server", "mqtt.example.com", 40, "", 1, "Network");
+wifiManager.addParameter(mqttServer);
 ```
 
 ### Callbacks
-
-ModernWifi provides several callbacks to handle different events:
-
-```cpp
-// Called when the device enters configuration mode (captive portal)
-void configModeCallback(WiFiManager* wm) {
-  Serial.println("Entered configuration mode.");
-  Serial.print("AP IP address: ");
-  Serial.println(WiFi.softAPIP());
-}
-
-// Called when the configuration is saved after a successful connection
-void saveConfigCallback() {
-  Serial.println("Configuration saved.");
-  // Save custom parameters to persistent storage
-  // ...
-}
-
-// Called when the configuration portal times out
-void configTimeoutCallback() {
-  Serial.println("Configuration portal timed out.");
-  // Handle timeout (reconnect, restart, etc.)
-  // ...
-}
-
-// Set callbacks
-wifiManager.setAPCallback(configModeCallback);
-wifiManager.setSaveConfigCallback(saveConfigCallback);
-wifiManager.setConfigPortalTimeoutCallback(configTimeoutCallback);
-```
-
-### Static IP Configuration
-
-```cpp
-// Set static IP for the access point
-wifiManager.setAPStaticIPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
-
-// Set static IP for the station (when connected to a router)
-wifiManager.setSTAStaticIPConfig(IPAddress(192,168,1,100), IPAddress(192,168,1,1), IPAddress(255,255,255,0), IPAddress(8,8,8,8));
-```
-
-### mDNS Support
-
-Multicast DNS allows you to access your device using a hostname instead of an IP address:
-
-```cpp
-// Set mDNS hostname
-wifiManager.setMDNSHostname("myesp32");
-
-// Now you can access your device at: http://myesp32.local
-```
-
-### HTTPS Support
-
-For secure connections, you can enable HTTPS support:
-
-```cpp
-// Enable HTTPS
-wifiManager.setUseHTTPS(true);
-
-// Set SSL certificates
-wifiManager.setSSLCredentials(
-  "-----BEGIN CERTIFICATE-----\n...your certificate...\n-----END CERTIFICATE-----",
-  "-----BEGIN PRIVATE KEY-----\n...your key...\n-----END PRIVATE KEY-----"
-);
-```
-
-### Authentication
-
-To secure your configuration portal with username and password authentication:
-
-```cpp
-// Enable authentication
-wifiManager.setAuthentication(true, "admin", "secure_password");
-
-// Check if authentication is enabled
-if (wifiManager.isAuthenticationEnabled()) {
-  Serial.println("Portal is secured with authentication");
-}
-```
-
-The login interface features:
-- Modern, responsive design with animated elements
-- Dark mode support
-- Password visibility toggle
-- Visual feedback on input focus
-- Animated particle background
-- Secure credential handling
-
-![Login Interface](screenshots/login.png)
-*The secure login interface with animated particle background*
-
-### Serial Monitor
-
-The web-based serial monitor allows you to view device logs remotely:
-
-```cpp
-// Enable serial monitor in configuration
-config.enableSerialMonitor = true;
-config.serialMonitorBufferSize = 5000; // Buffer size in characters
-
-// Or enable it directly
-wifiManager.enableSerialMonitor(true, 5000);
-
-// Access the serial monitor at: http://device-ip/serial
-```
-
-The serial monitor features:
-- Syntax highlighting for code snippets
-- Command history with up/down arrow navigation
-- Adjustable baud rate
-- Timestamps toggle
-- Auto-scroll option
-- Matrix-style visual effect toggle
-- Log saving functionality
-
-![Terminal Monitor](screenshots/terminal.png)
-*The terminal-style serial monitor with syntax highlighting and command history*
-
-### UI Customization
-
-You can customize the appearance of the configuration portal:
-
-```cpp
-// Add custom HTML to the head section
-wifiManager.setCustomHeadElement("<link href='https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css' rel='stylesheet'>");
-
-// Add custom HTML to the body footer
-wifiManager.setCustomBodyFooter("<div class='text-center'>My Custom Footer</div>");
-```
-
-You can also customize the branding by editing the `branding.json` file in the data directory:
-
-```json
-{
-  "brand": {
-    "name": "MyDevice",
-    "logo": "/logo.png",
-    "favicon": "/favicon.ico",
-    "version": "1.0.0"
-  },
-  "theme": {
-    "primary_color": "#3B82F6",
-    "secondary_color": "#818CF8"
-  }
-}
-```
-
-#### Interface Screenshots
-
-The ModernWifi configuration portal features a clean, responsive interface:
-
-![PC Interface](screenshots/PC.png)
-*The configuration portal as viewed on a desktop browser*
-
-![Mobile Interface](screenshots/Mobile.png)
-*The responsive mobile interface for on-the-go configuration*
-
-![Dark Mode](screenshots/Darkmode.png)
-*Dark mode interface for comfortable nighttime use*
-
-## 📚 API Reference
-
-### WiFiManager Class
-
-#### Constructor
-
-```cpp
-WiFiManager(const WiFiManagerConfig& config = WiFiManagerConfig());
-```
-
-#### Initialization & Main Loop
-
-```cpp
-void begin();   // Initialize HTTP endpoints, DNS, MDNS (if enabled)
-void loop();    // Must be called in your main loop
-```
-
-#### Connection Management
-
-```cpp
-bool autoConnect(const char* apName = nullptr, const char* apPassword = nullptr);
-bool startConfigPortal(const char* apName, const char* apPassword = nullptr);
-void stopConfigPortal();
-bool connectToNetwork(const char* ssid, const char* password);
-bool disconnectFromNetwork();
-void resetSettings();
-```
-
-#### Static IP Configuration
-
-```cpp
-void setAPStaticIPConfig(IPAddress ip, IPAddress gateway, IPAddress subnet);
-void setSTAStaticIPConfig(IPAddress ip, IPAddress gateway, IPAddress subnet, IPAddress dns = IPAddress(0,0,0,0));
-```
-
-#### Custom Parameters
-
-```cpp
-bool addParameter(WiFiManagerParameter* param);
-std::vector<WiFiManagerParameter*> getParameters() const;
-```
-
-#### Debug & Callbacks
-
-```cpp
-void setDebugOutput(bool debug, Print& debugPort = Serial);
-void setAPCallback(std::function<void(WiFiManager*)> callback);
-void setSaveConfigCallback(std::function<void()> callback);
-void setConfigPortalTimeoutCallback(std::function<void()> callback);
-```
-
-#### Custom HTML Injection
-
-```cpp
-void setCustomHeadElement(const char* html);
-void setCustomBodyFooter(const char* html);
-```
-
-#### MDNS Support
-
-```cpp
-void setMDNSHostname(const char* hostname);
-```
-
-#### HTTPS Support
-
-```cpp
-void setUseHTTPS(bool flag);
-void setSSLCredentials(const char* cert, const char* key);
-```
-
-#### Authentication
-
-```cpp
-void setAuthentication(bool enable, const char* username = "", const char* password = "");
-bool isAuthenticationEnabled() const;
-```
-
-#### Serial Monitor
-
-```cpp
-void enableSerialMonitor(bool enable, unsigned int bufferSize = 5000);
-bool isSerialMonitorEnabled() const;
-String getSerialMonitorBuffer() const;
-```
-
-#### Network Scanning & Status
-
-```cpp
-std::vector<WiFiNetwork> scanNetworks(bool forceScan = false);
-String getConnectionStatus();
-uint8_t getLastConxResult();
-```
-
-### WiFiManagerParameter Class
-
-```cpp
-// Basic constructor
-WiFiManagerParameter(const char* id, const char* label, const char* defaultValue, int length, const char* customHTML = "");
-
-// Get the parameter value
-const char* getValue() const;
-
-// Get the parameter ID
-const char* getID() const;
-
-// Get the parameter label
-const char* getLabel() const;
-```
-
-### WiFiManagerConfig Struct
-
-```cpp
-struct WiFiManagerConfig {
-  uint16_t httpPort = 80;                  // Web server port
-  unsigned long connectTimeout = 10000;    // WiFi connection timeout (ms)
-  unsigned long configPortalTimeout = 180000; // Portal timeout (ms)
-  bool autoReconnect = true;               // Auto reconnect if connection lost
-  bool useAuth = false;                    // Enable authentication
-  String portalUsername = "";              // Auth username
-  String portalPassword = "";              // Auth password
-  bool enableSerialMonitor = false;        // Enable web serial monitor
-  unsigned int serialMonitorBufferSize = 5000; // Serial buffer size
-};
-```
-
-## 🎨 Customization
-
-### Build Flags
-
-ModernWifi supports several build flags to enable or disable features:
-
-```ini
--DUSE_HTTPS              # Enable HTTPS support
--DWEBSERVER_HTTPS        # Use AsyncWebServerSecure
--DENABLE_MDNS            # Enable mDNS support
--DENABLE_STATISTICS      # Enable statistics tracking
--DENABLE_CUSTOM_PARAMETERS # Enable custom parameters
--DENABLE_SERIAL_MONITOR  # Enable web-based serial monitor
-```
-
-### Web Interface
-
-The web interface is built with:
-- Tailwind CSS for styling
-- Font Awesome for icons
-- Vanilla JavaScript for interactivity
-
-All web assets are stored in the `data` directory and should be uploaded to the device's filesystem.
-
-### Parameter Types
-
-ModernWifi supports various HTML input types for custom parameters:
-
-- text (default)
-- password
-- number
-- checkbox
-- radio
-- color
-- date
-- time
-- range
-- select
-- textarea
-
+Set callback functions for various events:
+- **AP Mode**: Triggered when the captive portal is activated.
+- **Save Config**: Called after a successful configuration.
+- **Timeout**: Invoked when the configuration portal times out.
+  
 Example:
-
 ```cpp
-// Color picker
-new WiFiManagerParameter("color", "Theme Color", "#ff0000", 10, "type='color'");
+void configModeCallback(WiFiManager* wm) {
+  Serial.println("Entered configuration mode. AP IP: " + WiFi.softAPIP().toString());
+}
 
-// Number with range
-new WiFiManagerParameter("temp", "Temperature", "22", 5, "type='number' min='0' max='40' step='0.5'");
+wifiManager.setAPCallback(configModeCallback);
 ```
 
-## 📝 Examples
+### Static IP & mDNS
+- **Static IP**: Set fixed IP addresses for both access point and station modes.
+- **mDNS**: Assign a hostname (e.g., `mydevice.local`) so you can access your device by name.
+  
+Example:
+```cpp
+wifiManager.setAPStaticIPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
+wifiManager.setMDNSHostname("myesp32");
+```
 
-Check the `examples` directory for sample code demonstrating various features:
+### HTTPS & Authentication
+Secure your portal:
+- **HTTPS**: Enable secure connections and set your SSL certificate and private key.
+- **Authentication**: Protect your captive portal with a username and password.
+  
+Example:
+```cpp
+wifiManager.setUseHTTPS(true);
+wifiManager.setSSLCredentials("-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----",
+                              "-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----");
+wifiManager.setAuthentication(true, "admin", "secure_password");
+```
 
-- Basic WiFi configuration
-- Custom parameters
-- Static IP configuration
-- HTTPS setup
-- Authentication
-- Serial monitor usage
+### Serial Monitor & Terminal Interface
+- **Serial Monitor**: Enable the web-based serial monitor to remotely view logs.
+- **Terminal Interface**: Access an interactive terminal (stub provided) via the `/terminal` endpoint.
+  
+Example:
+```cpp
+// In your config:
+config.enableSerialMonitor = true;
+config.serialMonitorBufferSize = 5000;
+```
 
-## ❓ Troubleshooting
+### OTA Updates, File Explorer, & Backup/Restore
+- **OTA Updates**: Initiate firmware updates via the `/ota` endpoint.
+- **File Explorer**: Browse the filesystem with endpoints like `/fs/list`, `/fs/upload`, and `/fs/delete`.
+- **Backup/Restore**: Export your entire configuration as JSON through `/backup` and restore it via `/restore`.
+  
+These endpoints are provided as stubs—you can integrate your own update and file management libraries.
 
-### Common Issues
+### Localization & UI Customization
+- **Localization**: Set the device language to support multiple locales and adjust parameter group labels.
+- **UI Customization**: Use `setCustomHeadElement()` and `setCustomBodyFooter()` to add custom HTML (e.g., include external CSS frameworks like Tailwind CSS or custom branding elements).
+  
+Example:
+```cpp
+wifiManager.setCustomHeadElement("<link href='https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css' rel='stylesheet'>");
+wifiManager.setCustomBodyFooter("<div class='text-center'>© 2023 MyCompany</div>");
+#ifdef ENABLE_LOCALIZATION
+wifiManager.setLanguage("en");
+#endif
+```
 
-1. **Cannot connect to WiFi**: Ensure your credentials are correct and the network is in range.
+---
 
-2. **Configuration portal not appearing**: Make sure you're calling `wifiManager.loop()` in your main loop.
+## API Reference
 
-3. **HTTPS not working**: Verify that you've compiled with `-DUSE_HTTPS` and `-DWEBSERVER_HTTPS` flags.
+ModernWifi provides a comprehensive API. Refer to the in-code documentation for complete details. Key classes include:
 
-4. **Serial monitor not showing data**: Check that you've enabled it with `-DENABLE_SERIAL_MONITOR` and called `wifiManager.enableSerialMonitor(true)`.
+- **WiFiManager**  
+  Handles initialization, connection management, captive portal, and advanced endpoints.
+  
+  Key methods:
+  - `begin()`, `loop()`
+  - `autoConnect()`, `startConfigPortal()`
+  - `connectToNetwork()`, `disconnectFromNetwork()`
+  - `setAPStaticIPConfig()`, `setSTAStaticIPConfig()`
+  - `addParameter()`, `getParameters()`
+  - Advanced endpoints: `handleOTA()`, `handleFSList()`, `handleBackup()`, etc.
 
-5. **Memory issues**: If you're experiencing crashes, try reducing the serial monitor buffer size or disabling features you don't need.
+- **WiFiManagerParameter**  
+  Manages custom configuration fields, including HTML generation and validation.
+  
+  Key methods:
+  - Constructors for basic and advanced types
+  - `getValue()`, `getID()`, `getLabel()`
+  - `setValue()`, `setValidation()`
+  - `getHTML()`
 
-## 👥 Contributing
+- **WiFiManagerConfig**  
+  A structure to configure connection timeouts, authentication, serial monitor settings, etc.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Customization & Build Flags
 
-## 📄 License
+ModernWifi is fully modular. Customize your firmware by adding (or omitting) the following build flags in your `platformio.ini`:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- `-DENABLE_HTML_INTERFACE` – Include the captive portal HTML interface.
+- `-DENABLE_BRANDING` – Enable full–featured branded UI (requires your assets).
+- `-DENABLE_SERIAL_MONITOR` – Compile the web–based serial monitor.
+- `-DENABLE_WEBSOCKETS` – Enable WebSocket support for real–time logging.
+- `-DENABLE_OTA` – Include the OTA update endpoint.
+- `-DENABLE_FS_EXPLORER` – Enable file system explorer endpoints.
+- `-DENABLE_BACKUP_RESTORE` – Include backup/restore configuration endpoints.
+- `-DENABLE_TERMINAL` – Add the interactive terminal interface.
+- `-DENABLE_MULTI_CRED` – Support multiple WiFi credentials.
+- `-DENABLE_LOCALIZATION` – Enable language support and localized UI.
+- `-DENABLE_MDNS` – Include mDNS support.
+- `-DENABLE_HTTPS` – Enable secure HTTPS connections.
+- `-DENABLE_AUTH` – Compile in authentication for the portal.
+
+Additionally, choose one of three build modes:
+- Ultra Light (`-DBUILD_MODE_ULTRA_LIGHT`)
+- Light (`-DBUILD_MODE_LIGHT`)
+- Normal (`-DBUILD_MODE_NORMAL`)
+
+This flexibility lets you create a tailored firmware that meets your project’s memory and feature requirements.
+
+---
+
+## Examples
+
+The `examples` directory includes sample sketches that demonstrate:
+- Basic WiFi setup and auto-connect
+- Custom parameter integration and callback usage
+- Static IP configuration and mDNS setup
+- Secure HTTPS and authentication
+- OTA update and file system management
+- Real–time logging and terminal interface
+
+---
+
+## Troubleshooting
+
+- **WiFi Connection Failures**: Check credentials, signal strength, and ensure proper configuration.
+- **Captive Portal Not Showing**: Ensure that `wifiManager.loop()` is called in the main loop.
+- **HTTPS Issues**: Verify that the appropriate build flags are set and that your certificates are valid.
+- **Memory Crashes**: Reduce buffer sizes (e.g., for the serial monitor) or disable features that are not required.
+- **OTA/File Explorer Not Working**: These endpoints are provided as stubs—integrate your preferred libraries for full functionality.
+
+---
+
+## Contributing
+
+Contributions are welcome! To contribute:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/your-feature`).
+3. Commit your changes with detailed messages.
+4. Push to your branch and open a Pull Request.
+
+For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## License
+
+ModernWifi is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

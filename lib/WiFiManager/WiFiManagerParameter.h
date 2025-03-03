@@ -2,6 +2,7 @@
 #define WIFI_MANAGER_PARAMETER_H
 
 #include <Arduino.h>
+#include <functional>
 
 enum class ParameterType {
     TEXT,
@@ -27,15 +28,15 @@ enum class ParameterType {
 
 class WiFiManagerParameter {
 public:
-    // Constructor for basic text parameter
+    // Constructor for basic text parameter.
     WiFiManagerParameter(const char* id, const char* label, const char* defaultValue, int length,
-                        const char* customHTML = "", int labelPlacement = 1);
+                         const char* customHTML = "", int labelPlacement = 1, const char* group = "");
     
-    // Constructor for advanced parameter types
+    // Constructor for advanced parameter types.
     WiFiManagerParameter(const char* id, const char* label, const char* defaultValue,
-                        ParameterType type, const char* customAttributes = "");
+                         ParameterType type, const char* customAttributes = "", const char* group = "");
     
-    // Getters
+    // Getters.
     const char* getID() const;
     const char* getLabel() const;
     const char* getValue() const;
@@ -44,15 +45,16 @@ public:
     const char* getCustomHTML() const;
     int getLabelPlacement() const;
     bool isValid() const;
+    const char* getGroup() const;
     
-    // Setters
+    // Setters.
     void setValue(const char* value);
     void setCustomAttributes(const char* attributes);
     
-    // Validation
+    // Validation.
     void setValidation(std::function<bool(const char*)> validator);
     
-    // HTML Generation
+    // HTML Generation.
     String getHTML() const;
     
 private:
@@ -64,9 +66,9 @@ private:
     String _customHTML;
     int _length;
     int _labelPlacement;
+    String _group;
     std::function<bool(const char*)> _validator;
     
-    // Helper methods
     bool validateValue(const char* value) const;
     String generateInputHTML() const;
 };
