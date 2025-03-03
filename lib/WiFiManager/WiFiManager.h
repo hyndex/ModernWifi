@@ -187,6 +187,9 @@ private:
   unsigned long _lastSerialUpdate;
 #endif
 
+  // Helper functions
+  String getInputTypeString(WiFiManagerParameterType type);
+  
   // Internal HTTP handlers.
   void handleRoot(AsyncWebServerRequest *request);
   void handleScan(AsyncWebServerRequest *request);

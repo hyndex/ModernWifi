@@ -2,6 +2,7 @@
 #include "WiFiManagerParameter.h"
 #include <Arduino.h>
 #include <cstring>
+#include "BuildModes.h"
 
 // Platform-specific includes are handled in WiFiManager.h
 
@@ -353,20 +354,121 @@ std::vector<WiFiNetwork> WiFiManager::scanNetworks(bool forceScan) {
   return networks;
 }
 
+// ----- Helper Functions -----
+String WiFiManager::getInputTypeString(WiFiManagerParameterType type) {
+  switch(type) {
+    case WIFI_MANAGER_PARAM_TEXT: return "text";
+    case WIFI_MANAGER_PARAM_PASSWORD: return "password";
+    case WIFI_MANAGER_PARAM_NUMBER: return "number";
+    case WIFI_MANAGER_PARAM_CHECKBOX: return "checkbox";
+    case WIFI_MANAGER_PARAM_SELECT: return "select";
+    case WIFI_MANAGER_PARAM_COLOR: return "color";
+    case WIFI_MANAGER_PARAM_DATE: return "date";
+    case WIFI_MANAGER_PARAM_TIME: return "time";
+    case WIFI_MANAGER_PARAM_DATETIME: return "datetime-local";
+    case WIFI_MANAGER_PARAM_EMAIL: return "email";
+    case WIFI_MANAGER_PARAM_RANGE: return "range";
+    default: return "text";
+  }
+}
+
 // ----- Internal HTTP Handlers -----
 void WiFiManager::handleRoot(AsyncWebServerRequest *request) {
   if (_useAuth && !checkAuthentication(request)) {
     return;
   }
   
-  String page = "<html><head>";
-  if (_customHeadElement.length() > 0)
-    page += _customHeadElement;
-  page += "<meta charset='utf-8'><title>ESP32 WiFi Manager</title></head><body>";
-  page += "<h1>ESP32 WiFi Manager</h1>";
-  page += "<p>Current Status: " + getConnectionStatus() + "</p>";
-  page += "</body></html>";
-  request->send(200, "text/html", page);
+#ifdef ENABLE_HTML_INTERFACE
+  // In LIGHT and NORMAL modes, serve HTML interface
+  #ifdef ENABLE_BRANDING
+    // In NORMAL mode, serve the full-featured HTML file from SPIFFS
+    if (SPIFFS.exists("/index.html")) {
+      request->send(SPIFFS, "/index.html", "text/html");
+      return;
+    }
+  #else
+    // In LIGHT mode, generate a simple HTML interface
+    String page = "<html><head>";
+    if (_customHeadElement.length() > 0)
+      page += _customHeadElement;
+    page += "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+    page += "<title>WiFi Manager</title>";
+    page += "<style>";
+    page += "body{font-family:Arial,sans-serif;margin:0;padding:20px;line-height:1.6;color:#333}";
+    page += "h1{color:#0066cc}";
+    page += ".container{max-width:800px;margin:0 auto;padding:20px;background:#f9f9f9;border-radius:5px}";
+    page += ".btn{display:inline-block;padding:8px 16px;background:#0066cc;color:white;border:none;border-radius:4px;cursor:pointer;text-decoration:none}";
+    page += ".btn:hover{background:#0055aa}";
+    page += "input,select{width:100%;padding:8px;margin:5px 0 15px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box}";
+    page += "</style>";
+    page += "</head><body>";
+    page += "<div class='container'>";
+    page += "<h1>WiFi Manager</h1>";
+    page += "<p>Current Status: " + getConnectionStatus() + "</p>";
+    page += "<h2>Available Networks</h2>";
+    page += "<p><button class='btn' onclick='scanNetworks()'>Scan Networks</button></p>";
+    page += "<div id='networks'></div>";
+    page += "<h2>Connect to Network</h2>";
+    page += "<form id='wifi-form'>";
+    page += "<label for='ssid'>Network Name:</label>";
+    page += "<input type='text' id='ssid' name='ssid' required>";
+    page += "<label for='password'>Password:</label>";
+    page += "<input type='password' id='password' name='password'>";
+    page += "<button type='submit' class='btn'>Connect</button>";
+    page += "</form>";
+    
+    // Add custom parameters if any
+    if (_params.size() > 0) {
+      page += "<h2>Custom Parameters</h2>";
+      page += "<form id='params-form'>";
+      for (auto param : _params) {
+        page += "<label for='" + String(param->getID()) + "'>" + String(param->getLabel()) + ":</label>";
+        page += "<input type='" + getInputTypeString(param->getType()) + "' id='" + String(param->getID()) + "' name='" + String(param->getID()) + "' value='" + String(param->getValue()) + "' " + String(param->getCustomAttributes()) + ">";
+      }
+      page += "<button type='submit' class='btn'>Save</button>";
+      page += "</form>";
+    }
+    
+    page += "</div>";
+    page += "<script>";
+    page += "function scanNetworks(){";
+    page += "  document.getElementById('networks').innerHTML='Scanning...';";  
+    page += "  fetch('/scan').then(r=>r.json()).then(data=>{";
+    page += "    let html='<ul>';";  
+    page += "    data.forEach(n=>{";  
+    page += "      html+='<li><a href="#" onclick="selectNetwork(\''+n.ssid+'\')">';";  
+    page += "      html+=n.ssid+' ('+n.rssi+'dBm)';";  
+    page += "      html+='</a></li>';";  
+    page += "    });";  
+    page += "    html+='</ul>';";  
+    page += "    document.getElementById('networks').innerHTML=html;";  
+    page += "  });";  
+    page += "}";
+    page += "function selectNetwork(ssid){document.getElementById('ssid').value=ssid;}";
+    page += "document.getElementById('wifi-form').onsubmit=function(e){";
+    page += "  e.preventDefault();";  
+    page += "  const formData=new FormData(e.target);";  
+    page += "  fetch('/connect',{method:'POST',body:formData}).then(r=>r.json()).then(data=>{";  
+    page += "    alert(data.result || 'Connected!');";  
+    page += "  }).catch(err=>{";  
+    page += "    alert('Connection failed');";  
+    page += "  });";  
+    page += "}";
+    page += "</script>";
+    page += "</body></html>";
+    request->send(200, "text/html", page);
+    return;
+  #endif
+#else
+  // In ULTRA_LIGHT mode, only serve JSON API
+  String json = "{";
+  json += "\"status\":\"" + getConnectionStatus() + "\",";
+  json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
+  json += "\"ssid\":\"" + WiFi.SSID() + "\",";
+  json += "\"rssi\":" + String(WiFi.RSSI());
+  json += "}";
+  request->send(200, "application/json", json);
+#endif
 }
 
 void WiFiManager::handleScan(AsyncWebServerRequest *request) {

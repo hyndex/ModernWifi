@@ -71,10 +71,48 @@ A production-ready WiFi connection manager for ESP32 and RP2040 with captive por
 - **Parameter Type System**: Enhanced parameter type handling with proper validation
 - **Authentication Support**: Added secure portal access with username/password protection
 - **Serial Monitor**: Added web-based terminal-style serial monitor with syntax highlighting and command history
+- **Compilation Modes**: Added three compilation modes to optimize for different use cases and memory constraints
 - **Bug Fixes**:
   - Fixed syntax error in WiFiManager.cpp
   - Resolved compatibility issues between WiFiManager and WiFiManagerParameter classes
   - Improved error handling throughout the codebase
+
+## 🔧 Compilation Modes
+
+ModernWifi now supports three compilation modes to suit different project requirements and memory constraints:
+
+### 1. Ultra Light Mode
+- **Build Flag**: `-DBUILD_MODE_ULTRA_LIGHT`
+- **Description**: API-only mode with no HTML interface, ideal for projects with severe memory constraints
+- **Features**:
+  - JSON API endpoints for programmatic access
+  - Core WiFi connection functionality
+  - Minimal memory footprint
+  - No web assets or HTML interface
+- **Use Case**: Headless IoT devices, sensor nodes, or any project where memory is extremely limited
+
+### 2. Light Mode
+- **Build Flag**: `-DBUILD_MODE_LIGHT`
+- **Description**: Simple HTML interface with minimal assets, balancing functionality and memory usage
+- **Features**:
+  - Basic responsive HTML interface generated on-the-fly
+  - Support for all parameter types (text, number, color, etc.)
+  - No external resources (CSS, JS, images)
+  - Reduced memory footprint compared to Normal mode
+- **Use Case**: Projects with moderate memory constraints that still need a user interface
+
+### 3. Normal Mode (Default)
+- **Build Flag**: `-DBUILD_MODE_NORMAL`
+- **Description**: Full-featured interface with branding, modern UI, and all features enabled
+- **Features**:
+  - Modern dashboard with Tailwind CSS
+  - Dark mode support
+  - Custom branding and theming
+  - External resources for enhanced UI
+  - All advanced features (serial monitor, authentication, etc.)
+- **Use Case**: User-facing projects where the interface quality is important
+
+To select a mode, uncomment the appropriate build flag in your `platformio.ini` file:
 
 ## 📥 Installation
 
@@ -93,6 +131,16 @@ lib_deps =
     https://github.com/bblanchon/ArduinoJson
     DNSServer
     ; Add ModernWifi repository URL here
+
+; Build modes - choose one by uncommenting
+; 1. Ultra Light Mode - API only, no HTML interface
+; build_flags = -DBUILD_MODE_ULTRA_LIGHT
+
+; 2. Light Mode - Simple HTML interface with minimal assets
+; build_flags = -DBUILD_MODE_LIGHT
+
+; 3. Normal Mode - Full featured interface with branding (default)
+build_flags = -DBUILD_MODE_NORMAL
 
 [env:esp32]
 platform = espressif32
