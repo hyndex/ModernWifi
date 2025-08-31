@@ -154,17 +154,19 @@ void setup() {
   Serial.print("mDNS hostname set to: ");
   Serial.println(hostname + ".local");
 
-#ifdef USE_HTTPS
-  // Enable HTTPS support if compiled with USE_HTTPS flag
+#ifdef ENABLE_HTTPS
+  // Enable HTTPS support if compiled with ENABLE_HTTPS and secure server available
   wifiManager.setUseHTTPS(true);
-  // You would need to provide actual SSL certificates in production
+  // Provide actual SSL certificates for production use
   wifiManager.setSSLCredentials("-----BEGIN CERTIFICATE-----\n...your certificate...\n-----END CERTIFICATE-----",
                                "-----BEGIN PRIVATE KEY-----\n...your key...\n-----END PRIVATE KEY-----");
   Serial.println("HTTPS support enabled");
 #endif
 
   // Custom HTML elements - we'll use Tailwind CSS from CDN
+#ifdef ENABLE_HTML_INTERFACE
   wifiManager.setCustomHeadElement("<link href='https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css' rel='stylesheet'>");
+#endif
 
   // AutoConnect: Try connecting with stored credentials; if that fails, launch the captive portal
   Serial.println("Attempting to autoConnect...");

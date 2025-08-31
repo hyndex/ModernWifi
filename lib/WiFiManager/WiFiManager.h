@@ -25,39 +25,8 @@
   #include <SPIFFS.h>
   #include <AsyncTCP.h>
   #include <ESPAsyncWebServer.h>
-#elif defined(ARDUINO_ARCH_RP2040)
-  #define USING_RP2040
-  #include <WiFi.h>
-  #include <AsyncTCP_RP2040W.h>
-  #include <ESPAsyncWebServer.h>
-  #if __has_include(<LittleFS.h>)
-    #include <LittleFS.h>
-    #define SPIFFS LittleFS
-  #else
-    #include <FS.h>
-    #include <FSImpl.h>
-    #define SPIFFS FS
-  #endif
-#elif defined(ARDUINO_ARCH_AVR)
-  #define USING_AVR
-  #include <WiFi101.h>
-  #include <SPI.h>
-  #include <SD.h>
-  #define SPIFFS SD
-#elif defined(ARDUINO_ARCH_STM32)
-  #define USING_STM32
-  #include <WiFi.h>
-  #include <SPI.h>
-  #include <SD.h>
-  #define SPIFFS SD
-#elif defined(ARDUINO_ARCH_NXP)
-  #define USING_NXP
-  #include <WiFi.h>
-  #include <SPI.h>
-  #include <SD.h>
-  #define SPIFFS SD
 #else
-  #error "Unsupported platform. Please check compatibility."
+  #error "This library targets ESP32 family only."
 #endif
 
 #include <DNSServer.h>
@@ -65,10 +34,7 @@
 #include <functional>
 #include "WiFiManagerParameter.h"
 
-// Optional build-mode defaults
-#if __has_include(<BuildModes.h>)
-#include <BuildModes.h>
-#endif
+// Build modes removed; always provide full UI+API via feature flags.
 
 #ifdef ENABLE_HTTPS
   #include <WiFiClientSecure.h>

@@ -73,10 +73,8 @@ void WiFiManager::begin() {
   _server = new AsyncWebServer(_config.httpPort);
 #endif
 
-  // Filesystem initialization.
-  bool fsInitialized = false;
-#ifdef USING_ESP32
-  fsInitialized = SPIFFS.begin(true);
+  // Filesystem initialization (ESP32 only).
+  bool fsInitialized = SPIFFS.begin(true);
   if (!fsInitialized) {
     debug("Error mounting SPIFFS, attempting to format.");
     if (SPIFFS.format() && SPIFFS.begin(true)) {
@@ -88,30 +86,6 @@ void WiFiManager::begin() {
   } else {
     debug("SPIFFS mounted successfully");
   }
-#elif defined(USING_RP2040)
-  #if __has_include(<LittleFS.h>)
-    fsInitialized = SPIFFS.begin();
-    if (!fsInitialized) {
-      debug("Error mounting LittleFS, attempting to format.");
-      if (SPIFFS.format() && SPIFFS.begin()) {
-        fsInitialized = true;
-        debug("LittleFS formatted and mounted successfully");
-      } else {
-        debug("LittleFS format failed.");
-      }
-    } else {
-      debug("LittleFS mounted successfully");
-    }
-  #else
-    fsInitialized = SPIFFS.begin();
-    if (!fsInitialized) { debug("Error mounting filesystem"); }
-    else { debug("Filesystem mounted successfully"); }
-  #endif
-#elif defined(USING_AVR) || defined(USING_STM32) || defined(USING_NXP)
-  fsInitialized = SPIFFS.begin();
-  if (!fsInitialized) { debug("Error mounting filesystem"); }
-  else { debug("Filesystem mounted successfully"); }
-#endif
 
   // DNS server is started only when AP is started for the portal.
 
@@ -192,16 +166,12 @@ void WiFiManager::begin() {
   debug("HTTP server started on port " + String(_config.httpPort));
 
 #ifdef ENABLE_MDNS
-  #ifdef USING_ESP32
-    if (_useMDNS) {
-      if (MDNS.begin(_mdnsHostname.c_str())) {
-        debug("mDNS responder started as " + _mdnsHostname);
-        MDNS.addService("http", "tcp", _config.httpPort);
-      } else { debug("Error starting mDNS responder!"); }
-    }
-  #else
-    debug("mDNS not implemented on this platform");
-  #endif
+  if (_useMDNS) {
+    if (MDNS.begin(_mdnsHostname.c_str())) {
+      debug("mDNS responder started as " + _mdnsHostname);
+      MDNS.addService("http", "tcp", _config.httpPort);
+    } else { debug("Error starting mDNS responder!"); }
+  }
 #endif
 }
 
