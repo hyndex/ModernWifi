@@ -65,6 +65,11 @@
 #include <functional>
 #include "WiFiManagerParameter.h"
 
+// Optional build-mode defaults
+#if __has_include(<BuildModes.h>)
+#include <BuildModes.h>
+#endif
+
 #ifdef ENABLE_HTTPS
   #include <WiFiClientSecure.h>
   #if __has_include(<AsyncWebServerSecure.h>)
@@ -79,6 +84,13 @@
 #ifdef ENABLE_WEBSOCKETS
   #include <AsyncWebSocket.h>
 #endif
+
+// Network scan result structure
+struct WiFiNetwork {
+  String ssid;
+  int32_t rssi;
+  uint8_t encryptionType;
+};
 
 // ---------- Configuration Structure ----------
 struct WiFiManagerConfig {
@@ -253,7 +265,7 @@ private:
 #endif
 
   // Helper functions.
-  String getInputTypeString(WiFiManagerParameterType type);
+  String getInputTypeString(ParameterType type);
   
   // Internal HTTP handlers.
   void handleRoot(AsyncWebServerRequest *request);

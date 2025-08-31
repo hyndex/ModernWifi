@@ -1,4 +1,4 @@
-// ModernWifi Manager - Main JavaScript
+// ModernWifi Manager - Modern, consistent UI + robust API use
 
 // DOM Elements
 const connectionStatus = document.getElementById('connection-status');
@@ -15,6 +15,16 @@ const togglePasswordBtn = document.getElementById('toggle-password');
 const scanBtn = document.getElementById('scan-btn');
 const resetBtn = document.getElementById('reset-btn');
 const customParams = document.getElementById('custom-params');
+const stepperNav = document.getElementById('stepper-nav');
+const stepPanes = {
+  1: document.getElementById('step-1'),
+  2: document.getElementById('step-2'),
+  3: document.getElementById('step-3')
+};
+const prev2 = document.getElementById('prev-step-2');
+const next1 = document.getElementById('next-step-1');
+const next2 = document.getElementById('next-step-2');
+const prev3 = document.getElementById('prev-step-3');
 const themeToggle = document.getElementById('theme-toggle');
 const headerTitle = document.getElementById('header-title');
 const headerSubtitle = document.getElementById('header-subtitle');
@@ -27,8 +37,33 @@ const copyrightText = document.getElementById('copyright-text');
 // State
 let networks = [];
 let selectedNetwork = null;
+let currentStep = 1;
 let branding = null;
 let currentTheme = 'light'; // Default theme
+
+// Utilities
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const withTimeout = async (promise, ms = 5000) => {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await promise(ctrl.signal);
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+};
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span><span>${message}</span>`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-6px)'; }, 3200);
+  setTimeout(() => container.removeChild(el), 3800);
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchNetworks();
   fetchCustomParams();
   setupEventListeners();
+  goToStep(1);
 });
 
 // Load branding configuration
@@ -156,10 +192,10 @@ function applyTheme(theme) {
 // Setup Event Listeners
 function setupEventListeners() {
   // Scan button
-  scanBtn.addEventListener('click', fetchNetworks);
+  if (scanBtn) scanBtn.addEventListener('click', fetchNetworks);
   
   // Reset button
-  resetBtn.addEventListener('click', resetSettings);
+  if (resetBtn) resetBtn.addEventListener('click', resetSettings);
   
   // Form submission
   wifiForm.addEventListener('submit', (e) => {
@@ -189,6 +225,24 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Stepper navigation
+  if (stepperNav) {
+    stepperNav.querySelectorAll('.step-pill').forEach(btn => {
+      btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.step, 10)));
+    });
+  }
+  if (next1) next1.addEventListener('click', () => goToStep(2));
+  if (prev2) prev2.addEventListener('click', () => goToStep(1));
+  if (next2) next2.addEventListener('click', () => {
+    if (!ssidInput.value.trim()) {
+      showToast('Please enter SSID', 'error');
+      ssidInput.focus();
+      return;
+    }
+    goToStep(3);
+  });
+  if (prev3) prev3.addEventListener('click', () => goToStep(2));
 }
 
 // Fetch current connection status
@@ -200,6 +254,10 @@ async function fetchStatus() {
     connectionStatus.textContent = data.status;
     connectionStatusDetail.textContent = data.status;
     ipAddress.textContent = data.ip;
+    if (data.ssid) {
+      const ssidEl = document.getElementById('ssid-current');
+      if (ssidEl) ssidEl.textContent = data.ssid;
+    }
     
     // Update UI based on connection status
     if (data.status === 'Connected') {
@@ -209,11 +267,10 @@ async function fetchStatus() {
       connectionStatus.classList.remove('text-blue-800', 'text-red-800', 'text-yellow-800');
       connectionStatus.classList.add('text-green-800');
       
-      // Update signal strength if available
-      if (WiFi && WiFi.RSSI) {
-        const rssi = WiFi.RSSI();
-        signalStrength.textContent = rssi + ' dBm';
-        signalBars.innerHTML = generateSignalBars(rssi);
+      // Update signal strength if available from status JSON
+      if (typeof data.rssi === 'number') {
+        signalStrength.textContent = data.rssi + ' dBm';
+        signalBars.innerHTML = generateSignalBars(data.rssi);
       }
     } else if (data.status === 'Connecting...') {
       connectionBadge.classList.remove('bg-blue-200', 'bg-red-200', 'bg-green-200');
@@ -240,12 +297,10 @@ async function fetchStatus() {
 // Fetch available networks
 async function fetchNetworks() {
   try {
-    networkList.innerHTML = '<div class="loading">Scanning networks...</div>';
+    networkList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin mr-2"></i>Scanning networks...</div>';
     scanBtn.disabled = true;
-    
     const response = await fetch('/scan');
     networks = await response.json();
-    
     displayNetworks(networks);
   } catch (error) {
     console.error('Error scanning networks:', error);
@@ -302,6 +357,8 @@ function selectNetwork(ssid) {
   selectedNetwork = networks.find(n => n.ssid === ssid);
   ssidInput.value = ssid;
   passwordInput.focus();
+  // Move to credentials step on selection for smoother flow
+  goToStep(2);
   
   // Highlight selected network
   document.querySelectorAll('.network-item').forEach(item => {
@@ -324,20 +381,22 @@ async function connectToNetwork() {
   }
   
   try {
-    // Collect custom parameters
-    const formData = new FormData(wifiForm);
-    const data = {
-      ssid: ssid,
-      password: password
-    };
+    // Prepare form data (URL-encoded/multipart) expected by server
+    const formData = new FormData();
+    formData.append('ssid', ssid);
+    formData.append('password', password);
     
     // Add any custom parameters
-    for (const [key, value] of formData.entries()) {
+    const existingForm = new FormData(wifiForm);
+    for (const [key, value] of existingForm.entries()) {
       if (key !== 'ssid' && key !== 'password') {
-        data[key] = value;
+        formData.append(key, value);
       }
     }
     
+    // Save custom parameters first (non-blocking)
+    try { await fetch('/update_params', { method: 'POST', body: existingForm }); } catch (e) { /* ignore */ }
+
     // Show connecting status
     connectionStatus.textContent = 'Connecting...';
     connectionStatus.style.color = 'var(--warning-color)';
@@ -345,28 +404,22 @@ async function connectToNetwork() {
     // Send connection request
     const response = await fetch('/connect', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
+      body: formData
     });
     
     const result = await response.json();
-    
     if (result.result === 'Connected') {
-      // Connection successful
-      alert('Successfully connected to ' + ssid);
-      // Refresh status after a short delay
-      setTimeout(fetchStatus, 2000);
+      showToast('Connected to ' + ssid, 'success');
+      // poll to reflect new IP and RSSI
+      for (let i=0;i<5;i++){ await sleep(800); await fetchStatus(); }
     } else {
-      // Connection failed
-      alert('Failed to connect to ' + ssid);
+      showToast('Failed to connect to ' + ssid, 'error');
       connectionStatus.textContent = 'Connection Failed';
       connectionStatus.style.color = 'var(--danger-color)';
     }
   } catch (error) {
     console.error('Error connecting to network:', error);
-    alert('Error connecting to network');
+    showToast('Error connecting to network', 'error');
     connectionStatus.textContent = 'Error';
     connectionStatus.style.color = 'var(--danger-color)';
   }
@@ -377,12 +430,11 @@ async function resetSettings() {
   if (confirm('Are you sure you want to reset all WiFi settings?')) {
     try {
       await fetch('/reset');
-      alert('Settings reset successfully');
-      // Refresh the page
-      window.location.reload();
+      showToast('Settings reset successfully', 'success');
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       console.error('Error resetting settings:', error);
-      alert('Error resetting settings');
+      showToast('Error resetting settings', 'error');
     }
   }
 }
@@ -394,7 +446,7 @@ async function fetchCustomParams() {
     const params = await response.json();
     
     if (params.length > 0) {
-      let html = '<h3>Additional Settings</h3>';
+      let html = '<h3 class="text-slate-200 font-medium mb-1">Additional Settings</h3>';
       
       params.forEach(param => {
         // Get parameter type if available, default to text
@@ -528,5 +580,17 @@ function getSignalStrengthFromRSSI(rssi) {
 // Periodically update status
 setInterval(fetchStatus, 10000); // Update every 10 seconds
 
-// Periodically update status
-setInterval(fetchStatus, 10000); // Update every 10 seconds
+// Stepper helpers
+function goToStep(step) {
+  currentStep = Math.max(1, Math.min(3, step));
+  Object.entries(stepPanes).forEach(([k, el]) => {
+    if (!el) return;
+    if (parseInt(k, 10) === currentStep) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+  if (stepperNav) {
+    stepperNav.querySelectorAll('.step-pill').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.step,10) === currentStep);
+    });
+  }
+}

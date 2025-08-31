@@ -113,7 +113,24 @@ void WiFiManager::begin() {
   else { debug("Filesystem mounted successfully"); }
 #endif
 
-  startDNS();
+  // DNS server is started only when AP is started for the portal.
+
+#ifdef USING_ESP32
+  // Attach WiFi event handler to improve stability and state tracking
+  WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info){
+    switch(event){
+      #ifdef SYSTEM_EVENT_STA_CONNECTED
+      case SYSTEM_EVENT_STA_CONNECTED: _lastConxResult = WL_CONNECTED; break;
+      case SYSTEM_EVENT_STA_DISCONNECTED: _lastConxResult = WL_DISCONNECTED; break;
+      #endif
+      #ifdef ARDUINO_EVENT_WIFI_STA_CONNECTED
+      case ARDUINO_EVENT_WIFI_STA_CONNECTED: _lastConxResult = WL_CONNECTED; break;
+      case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: _lastConxResult = WL_DISCONNECTED; break;
+      #endif
+      default: break;
+    }
+  });
+#endif
 
   // ----- HTTP Endpoints -----
 #ifdef ENABLE_HTML_INTERFACE
@@ -238,6 +255,7 @@ bool WiFiManager::startConfigPortal(const char* apName, const char* apPassword) 
     debug("Failed to start AP mode.");
     return false;
   }
+  startDNS();
   _configPortalStart = millis();
   if (_apCallback) { _apCallback(this); }
   debug("Config portal running...");
@@ -390,6 +408,7 @@ String WiFiManager::getSerialMonitorBuffer() const {
 String WiFiManager::getConnectionStatus() {
   switch(WiFi.status()){
     case WL_CONNECTED: return "Connected";
+    case WL_DISCONNECTED: return "Disconnected";
     case WL_CONNECT_FAILED: return "Connect Failed";
     case WL_NO_SSID_AVAIL: return "No SSID Available";
     case WL_IDLE_STATUS: return "Idle";
@@ -409,22 +428,25 @@ std::vector<WiFiNetwork> WiFiManager::scanNetworks(bool forceScan) {
     net.encryptionType = WiFi.encryptionType(i);
     networks.push_back(net);
   }
+#if defined(USING_ESP32)
+  WiFi.scanDelete();
+#endif
   debug(String(n) + " networks found.");
   return networks;
 }
-String WiFiManager::getInputTypeString(WiFiManagerParameterType type) {
+String WiFiManager::getInputTypeString(ParameterType type) {
   switch(type) {
-    case WIFI_MANAGER_PARAM_TEXT: return "text";
-    case WIFI_MANAGER_PARAM_PASSWORD: return "password";
-    case WIFI_MANAGER_PARAM_NUMBER: return "number";
-    case WIFI_MANAGER_PARAM_CHECKBOX: return "checkbox";
-    case WIFI_MANAGER_PARAM_SELECT: return "select";
-    case WIFI_MANAGER_PARAM_COLOR: return "color";
-    case WIFI_MANAGER_PARAM_DATE: return "date";
-    case WIFI_MANAGER_PARAM_TIME: return "time";
-    case WIFI_MANAGER_PARAM_DATETIME: return "datetime-local";
-    case WIFI_MANAGER_PARAM_EMAIL: return "email";
-    case WIFI_MANAGER_PARAM_RANGE: return "range";
+    case ParameterType::TEXT: return "text";
+    case ParameterType::PASSWORD: return "password";
+    case ParameterType::NUMBER: return "number";
+    case ParameterType::TOGGLE: return "checkbox";
+    case ParameterType::SELECT: return "select";
+    case ParameterType::COLOR: return "color";
+    case ParameterType::DATE: return "date";
+    case ParameterType::TIME: return "time";
+    case ParameterType::DATETIME_LOCAL: return "datetime-local";
+    case ParameterType::EMAIL: return "email";
+    case ParameterType::SLIDER: return "range";
     default: return "text";
   }
 }
@@ -432,11 +454,14 @@ String WiFiManager::getInputTypeString(WiFiManagerParameterType type) {
 // ----- Internal HTTP Handlers -----
 #ifdef ENABLE_HTML_INTERFACE
 void WiFiManager::handleRoot(AsyncWebServerRequest *request) {
-  if (#ifdef ENABLE_AUTH
-         !_useAuth || !checkAuthentication(request)
-      #else
-         false
-      #endif) return;
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
+  // Prefer serving rich static UI if available
+  if (SPIFFS.exists("/index.html")) {
+    request->send(SPIFFS, "/index.html", String(), false);
+    return;
+  }
   String page = "<html><head>";
 #ifdef ENABLE_HTML_INTERFACE
   if (_customHeadElement.length() > 0) page += _customHeadElement;
@@ -502,7 +527,9 @@ void WiFiManager::handleRoot(AsyncWebServerRequest *request) {
 #endif
 
 void WiFiManager::handleScan(AsyncWebServerRequest *request) {
-  if (/*if authentication enabled*/ false) { if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   auto networks = scanNetworks(true);
   String json = "[";
   for (size_t i = 0; i < networks.size(); i++) {
@@ -518,7 +545,9 @@ void WiFiManager::handleScan(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleConnect(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   if (request->method() == HTTP_POST) {
     if (request->hasParam("ssid", true) && request->hasParam("password", true)) {
       String ssid = request->getParam("ssid", true)->value();
@@ -538,7 +567,9 @@ void WiFiManager::handleConnect(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleReset(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   resetSettings();
   request->send(200, "application/json", "{\"result\":\"Settings reset\"}");
 }
@@ -548,11 +579,15 @@ void WiFiManager::handleNotFound(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleStatusJSON(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String json = "{";
   json += "\"status\":\"" + getConnectionStatus() + "\",";
   json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
   json += "\"lastResult\":" + String(getLastConxResult()) + ",";
+  json += "\"ssid\":\"" + (WiFi.SSID().length() ? WiFi.SSID() : String("")) + "\",";
+  json += "\"rssi\":" + String(WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0) + ",";
   json += "\"params\":[";
   for (size_t i = 0; i < _params.size(); i++) {
     json += "{";
@@ -571,13 +606,17 @@ void WiFiManager::handleStatusJSON(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleParamsJSON(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String json = "[";
   for (size_t i = 0; i < _params.size(); i++) {
     json += "{";
     json += "\"id\":\"" + String(_params[i]->getID()) + "\",";
     json += "\"label\":\"" + String(_params[i]->getLabel()) + "\",";
-    json += "\"value\":\"" + String(_params[i]->getValue()) + "\"";
+    json += "\"value\":\"" + String(_params[i]->getValue()) + "\",";
+    json += "\"type\":\"" + getInputTypeString(_params[i]->getType()) + "\",";
+    json += "\"attributes\":\"" + String(_params[i]->getCustomAttributes()) + "\"";
 #ifdef ENABLE_LOCALIZATION
     json += ",\"group\":\"" + String(_params[i]->getGroup()) + "\"";
 #endif
@@ -589,7 +628,9 @@ void WiFiManager::handleParamsJSON(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleUpdateParams(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   if (request->method() == HTTP_POST) {
     bool updated = false;
     for (size_t i = 0; i < _params.size(); i++) {
@@ -611,7 +652,9 @@ void WiFiManager::handleUpdateParams(AsyncWebServerRequest *request) {
 
 #ifdef ENABLE_OTA
 void WiFiManager::handleOTA(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   debug("OTA update initiated (stub).");
   request->send(200, "application/json", "{\"result\":\"OTA update initiated (stub)\"}");
 }
@@ -619,21 +662,31 @@ void WiFiManager::handleOTA(AsyncWebServerRequest *request) {
 
 #ifdef ENABLE_FS_EXPLORER
 void WiFiManager::handleFSList(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String fileList = "[";
-  Dir dir = SPIFFS.openDir("/");
   bool first = true;
-  while (dir.next()) {
+  File root = SPIFFS.open("/");
+  if (!root || !root.isDirectory()) {
+    request->send(500, "application/json", "{\"error\":\"Failed to open FS root\"}");
+    return;
+  }
+  File file = root.openNextFile();
+  while (file) {
     if (!first) fileList += ",";
-    fileList += "{\"name\":\"" + dir.fileName() + "\",\"size\":" + String(dir.fileSize()) + "}";
+    fileList += "{\"name\":\"" + String(file.name()) + "\",\"size\":" + String(file.size()) + "}";
     first = false;
+    file = root.openNextFile();
   }
   fileList += "]";
   request->send(200, "application/json", fileList);
 }
 
 void WiFiManager::handleFSDelete(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   if (request->hasParam("path")) {
     String path = request->getParam("path")->value();
     if (SPIFFS.exists(path)) {
@@ -651,7 +704,9 @@ void WiFiManager::handleFSDelete(AsyncWebServerRequest *request) {
 
 #ifdef ENABLE_BACKUP_RESTORE
 void WiFiManager::handleBackup(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String backup = "{";
 #ifdef ENABLE_MULTI_CRED
   backup += "\"wifi_credentials\":[";
@@ -677,7 +732,9 @@ void WiFiManager::handleBackup(AsyncWebServerRequest *request) {
 }
 
 void WiFiManager::handleRestore(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   if (request->hasParam("backup", true)) {
     String backup = request->getParam("backup", true)->value();
     debug("Restore configuration (stub): " + backup);
@@ -689,13 +746,15 @@ void WiFiManager::handleRestore(AsyncWebServerRequest *request) {
 #endif
 
 void WiFiManager::handleDeviceInfo(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String info = "{";
-#ifdef ESP.getFreeHeap
-  info += "\"free_heap\":" + String(ESP.getFreeHeap()) + ",";
-#endif
+  #if defined(USING_ESP32)
+    info += "\"free_heap\":" + String(ESP.getFreeHeap()) + ",";
+  #endif
   info += "\"uptime_ms\":" + String(millis()) + ",";
-  info += "\"rssi\":\"" + String(WiFi.RSSI()) + "\",";
+  info += "\"rssi\":" + String(WiFi.RSSI()) + ",";
   info += "\"ip\":\"" + WiFi.localIP().toString() + "\"";
   info += "}";
   request->send(200, "application/json", info);
@@ -703,7 +762,9 @@ void WiFiManager::handleDeviceInfo(AsyncWebServerRequest *request) {
 
 #ifdef ENABLE_TERMINAL
 void WiFiManager::handleTerminal(AsyncWebServerRequest *request) {
-  if(/*if authentication enabled*/ false){ if(!checkAuthentication(request)) return; }
+  #ifdef ENABLE_AUTH
+  if (!checkAuthentication(request)) return;
+  #endif
   String page = "<html><head><meta charset='utf-8'><title>Terminal</title></head><body>";
   page += "<h1>Terminal (stub)</h1>";
   page += "<p>This is a stub for an interactive terminal interface.</p>";
@@ -748,8 +809,4 @@ AsyncWebSocket* WiFiManager::getWebSocket() {
 // ----- Internal Helper Methods -----
 void WiFiManager::startDNS() {
   _dnsServer.start(53, "*", WiFi.softAPIP());
-}
-
-void WiFiManager::debug(String msg) {
-  if (_debug && _debugPort) { _debugPort->println("*wm: " + msg); }
 }

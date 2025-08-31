@@ -1,4 +1,16 @@
-/* Modern WiFi Manager - Custom Stylesheet to complement Tailwind CSS */
+/* ModernWifi UI refinements: glassmorphism, soft gradients, consistent theming */
+
+:root {
+  --primary-color: #3B82F6;
+  --primary-dark: #2563EB;
+  --primary-light: rgba(59,130,246,0.2);
+  --success-color: #10B981;
+  --danger-color: #EF4444;
+  --warning-color: #F59E0B;
+  --divider-color: rgba(255,255,255,0.12);
+  --text-color: #e5e7eb;
+  --text-secondary: #cbd5e1;
+}
 
 /* Custom animations */
 @keyframes pulse {
@@ -30,26 +42,27 @@
 /* Network list styling */
 .network-item {
   padding: 12px 15px;
-  border-bottom: 1px solid #E5E7EB; /* gray-200 */
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
+  backdrop-filter: blur(2px);
 }
 
 .network-item:hover {
-  background-color: #EFF6FF; /* blue-50 */
+  background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
 }
 
 .network-item.selected {
-  background-color: #DBEAFE; /* blue-100 */
-  border-left: 3px solid #3B82F6; /* blue-500 */
+  background: linear-gradient(90deg, rgba(16,185,129,0.25), rgba(16,185,129,0.05));
+  border-left: 3px solid #10B981;
 }
 
 .network-secure {
   margin-left: 5px;
-  color: #6B7280; /* gray-500 */
+  color: #93C5FD;
 }
 
 /* Form styling enhancements */
@@ -98,24 +111,10 @@ label {
 }
 
 /* Error message styling */
-.error {
-  color: #EF4444; /* red-500 */
-  text-align: center;
-  padding: 10px;
-  background-color: #FEE2E2; /* red-100 */
-  border-radius: 0.375rem;
-  margin-top: 0.5rem;
-}
+.error { color: #FCA5A5; text-align: center; padding: 10px; background-color: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); border-radius: 0.5rem; margin-top: 0.5rem; }
 
 /* Success message styling */
-.success {
-  color: #10B981; /* green-500 */
-  text-align: center;
-  padding: 10px;
-  background-color: #D1FAE5; /* green-100 */
-  border-radius: 0.375rem;
-  margin-top: 0.5rem;
-}
+.success { color: #6EE7B7; text-align: center; padding: 10px; background-color: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); border-radius: 0.5rem; margin-top: 0.5rem; }
 
 /* Button enhancements */
 button {
@@ -123,10 +122,7 @@ button {
   transition: all 0.2s ease;
 }
 
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
+button:hover { transform: translateY(-1px); box-shadow: 0 4px 14px -4px rgba(0,0,0,0.4); }
 
 button:active {
   transform: translateY(0);
@@ -134,13 +130,10 @@ button:active {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .grid {
-    gap: 1rem;
-  }
-  
-  .md\:col-span-2 {
-    grid-column: span 1;
-  }
+  .grid { gap: 1rem; }
+  .md\:col-span-2 { grid-column: span 1; }
+  .step-pill { padding: 8px 10px; }
+  .step-label { display: none; }
 }
 
 /* Custom parameter styling */
@@ -415,16 +408,20 @@ input:focus {
   color: var(--text-secondary);
 }
 
-footer {
-  text-align: center;
-  margin-top: 30px;
-  color: var(--text-secondary);
-}
+footer { text-align: center; margin-top: 30px; color: var(--text-secondary); }
 
 .small {
   font-size: 0.9rem;
   margin-top: 5px;
 }
+
+/* Stepper */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.step-pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,0.06); color: #e5e7eb; border: 1px solid rgba(255,255,255,0.1); transition: .2s; }
+.step-pill:hover { background: rgba(255,255,255,0.1); }
+.step-pill .step-index { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(16,185,129,0.3); color: #fff; font-weight: 600; font-size: 0.85rem; }
+.step-pill.active { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
+.step-pane.hidden { display: none; }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
@@ -450,7 +447,7 @@ footer {
   display: inline-block;
   width: 6px;
   margin-right: 2px;
-  background-color: var(--primary-color);
+  background-color: #34D399;
   border-radius: 1px;
 }
 
@@ -460,7 +457,20 @@ footer {
 .signal-3 { height: 12px; }
 .signal-4 { height: 15px; }
 
-.network-secure {
-  color: var(--success-color);
-  margin-left: 5px;
+.network-secure { color: var(--success-color); margin-left: 5px; }
+
+/* Toasts */
+#toast-container .toast { min-width: 240px; max-width: 320px; background: rgba(17,24,39,0.9); color: #e5e7eb; border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5);} 
+#toast-container .toast.success { border-color: rgba(16,185,129,0.4);} 
+#toast-container .toast.error { border-color: rgba(239,68,68,0.4);} 
+#toast-container .toast .icon { opacity: .9; }
+
+@media (max-width: 640px) {
+  #toast-container { right: 12px; left: 12px; }
+  #toast-container .toast { margin-left: auto; }
+}
+
+/* Safe area for iOS */
+@supports (padding: max(0px)) {
+  body { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
 }
